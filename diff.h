@@ -5,12 +5,14 @@
 #include <math.h>
 #include <malloc.h>
 
+const int MAX_WORD_LENGTH = 256;
+
 enum DiffError_t {
-    DIFF_OK         = 0,
-    DIFF_FILE_NULL  = 1,
-    DIFF_NULL       = 2,
-    DIFF_VALUE_NULL = 3,
-    DIFF_NO_MEM     = 4,
+    DIFF_OK         = 2 << 0,
+    DIFF_FILE_NULL  = 2 << 1,
+    DIFF_NULL       = 2 << 2,
+    DIFF_VALUE_NULL = 2 << 3,
+    DIFF_NO_MEM     = 2 << 4,
 };
 
 enum NodeType_t {
@@ -39,15 +41,27 @@ struct DiffNode_t {
     DiffNode_t *right = nullptr;
 };
 
+#define SKIP_SPACES() {      \
+    while (symb == ' ') {     \
+        symb = getc(readFile); \
+    }                           \
+}                                \
+
 #define DIFF_CHECK(expression, errorCode) { \
     if (expression) {                        \
         return errorCode;                     \
     }                                          \
 }                                               \
 
-DiffNode_t* diffNodeCtor(NodeType_t type, void* value, DiffNode_t* prev, int* err = nullptr);
+DiffNode_t* diffNodeCtor(DiffNode_t* prev, int* err = nullptr);
 
-int parseEquation(DiffNode_t* start, FILE* readFile);
+int addNodeVal(DiffNode_t* node, const char* value);
+
+int parseNode(DiffNode_t* node, FILE* readFile);
+
+int parseEquation(FILE* readFile);
+
+int openDiffFile(const char *fileName);
 
 void diffNodeDtor(DiffNode_t* node);
 

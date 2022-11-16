@@ -1,42 +1,101 @@
 #include "diff.h"
 
-DiffNode_t* diffNodeCtor(NodeType_t type, void* value, DiffNode_t* prev, int* err) {
-    if (!value) {
-        if (err) *err = DIFF_NULL;
-        return nullptr;
-    }
-
+DiffNode_t* diffNodeCtor(DiffNode_t* prev, int* err) {
     DiffNode_t* diffNode = (DiffNode_t*) calloc(1, sizeof(DiffNode_t));
     if (!diffNode) {
-        if (err) *err = DIFF_NO_MEM;
+        if (err) *err |= DIFF_NO_MEM;
         return nullptr;
     }
 
-    diffNode->type = type;
     diffNode->prev = prev;
 
-    switch (type) {
-        case OP: 
-            diffNode->opt = *((OpType_t*) value);
-            break;
-        case NUM:
-            diffNode->val = *((double*) value);
-            break;
-        case VAR:
-            diffNode->var = (const char*) value;
-            break;
-        case NODET_DEFAULT:
-            break;
-        default:
-            break;
-    }
+    // switch (type) {
+    //     case OP: 
+    //         diffNode->opt = *((OpType_t*) value);
+    //         break;
+    //     case NUM:
+    //         diffNode->val = *((double*) value);
+    //         break;
+    //     case VAR:
+    //         diffNode->var = (const char*) value;
+    //         break;
+    //     case NODET_DEFAULT:
+    //         break;
+    //     default:
+    //         break;
+    // }
 
     return diffNode;
 }
 
-int parseEquation(DiffNode_t* start, FILE *readFile) {
+int addNodeVal(DiffNode_t* node, const char* value) {
+    DIFF_CHECK(!node, DIFF_NULL);
+    DIFF_CHECK(!value, DIFF_FILE_NULL);
+
+    printf("%s \n", value);
 
     return DIFF_OK;
+}
+
+int parseNode(DiffNode_t* node, FILE* readFile) {
+    DIFF_CHECK(!node, DIFF_NULL);
+    DIFF_CHECK(!readFile, DIFF_FILE_NULL);
+
+    int symb = getc(readFile);
+    //printf("%c", symb);
+    //SKIP_SPACES();
+
+    //if (symb == EOF) return DIFF_OK;
+
+    // TODO: WORK WITH )*( case!!
+
+    if (symb == ')') {
+        return DIFF_OK;
+    } else if (symb == '(') {
+        node->left = diffNodeCtor(node);
+        parseNode(node->left, readFile);
+
+        // char word[MAX_WORD_LENGTH] = "";
+        // int wordIndex = 0;
+
+        symb = getc(readFile);
+        while (symb != '(' && symb != ')') {
+            printf("%c", symb);
+            symb = getc(readFile);
+        }
+        ungetc(symb, readFile);
+        // word[wordIndex - 1] = '\0';
+
+        // ungetc(symb, readFile);
+        // addNodeVal(node, word);
+
+        node->right = diffNodeCtor(node);
+        parseNode(node->right, readFile);
+    } else {
+        //printf("%c", symb);
+        ungetc(symb, readFile);
+    }
+
+    return DIFF_OK;
+}
+
+int parseEquation(FILE *readFile) {
+    DIFF_CHECK(!readFile, DIFF_FILE_NULL);
+
+    int error = DIFF_OK;
+    DiffNode_t* startNode = diffNodeCtor(nullptr, &error);
+    error |= parseNode(startNode, readFile);
+
+    return error;
+}
+
+int openDiffFile(const char *fileName) {
+    DIFF_CHECK(!fileName, DIFF_FILE_NULL);
+
+    FILE* readFile = fopen(fileName, "rb");
+    DIFF_CHECK(!readFile, DIFF_FILE_NULL);
+
+    return parseEquation(readFile);
 }
 
 void diffNodeDtor(DiffNode_t* node) {
