@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <malloc.h>
+#include <ctype.h>
 
 const int MAX_WORD_LENGTH = 256;
 
@@ -53,11 +54,11 @@ struct DiffNode_t {
     }                                          \
 }                                               \
 
-DiffNode_t* diffNodeCtor(DiffNode_t* prev, int* err = nullptr);
+DiffNode_t* diffNodeCtor(DiffNode_t* prev, DiffNode_t* left, DiffNode_t* right, int* err = nullptr);
 
-int addNodeVal(DiffNode_t* node, const char* value);
+int addNodeVal(DiffNode_t* node, char* value);
 
-int parseNode(DiffNode_t* node, FILE* readFile);
+DiffNode_t* parseNode(FILE* readFile);
 
 int parseEquation(FILE* readFile);
 

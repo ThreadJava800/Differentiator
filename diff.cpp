@@ -1,92 +1,105 @@
 #include "diff.h"
 
-DiffNode_t* diffNodeCtor(DiffNode_t* prev, int* err) {
+DiffNode_t* diffNodeCtor(DiffNode_t* prev, DiffNode_t* left, DiffNode_t* right, int* err) {
     DiffNode_t* diffNode = (DiffNode_t*) calloc(1, sizeof(DiffNode_t));
     if (!diffNode) {
         if (err) *err |= DIFF_NO_MEM;
         return nullptr;
     }
 
-    diffNode->prev = prev;
-
-    // switch (type) {
-    //     case OP: 
-    //         diffNode->opt = *((OpType_t*) value);
-    //         break;
-    //     case NUM:
-    //         diffNode->val = *((double*) value);
-    //         break;
-    //     case VAR:
-    //         diffNode->var = (const char*) value;
-    //         break;
-    //     case NODET_DEFAULT:
-    //         break;
-    //     default:
-    //         break;
-    // }
+    diffNode->prev  = prev;
+    diffNode->left  = left;
+    diffNode->right = right;
 
     return diffNode;
 }
 
-int addNodeVal(DiffNode_t* node, const char* value) {
+int addNodeVal(DiffNode_t* node, char* value) {
     DIFF_CHECK(!node, DIFF_NULL);
     DIFF_CHECK(!value, DIFF_FILE_NULL);
 
-    printf("%s \n", value);
+    printf("%s", value);
 
-    return DIFF_OK;
-}
-
-int parseNode(DiffNode_t* node, FILE* readFile) {
-    DIFF_CHECK(!node, DIFF_NULL);
-    DIFF_CHECK(!readFile, DIFF_FILE_NULL);
-
-    int symb = getc(readFile);
-    //printf("%c", symb);
-    //SKIP_SPACES();
-
-    //if (symb == EOF) return DIFF_OK;
-
-    // TODO: WORK WITH )*( case!!
-
-    if (symb == ')') {
-        return DIFF_OK;
-    } else if (symb == '(') {
-        node->left = diffNodeCtor(node);
-        parseNode(node->left, readFile);
-
-        // char word[MAX_WORD_LENGTH] = "";
-        // int wordIndex = 0;
-
-        symb = getc(readFile);
-        while (symb != '(' && symb != ')') {
-            printf("%c", symb);
-            symb = getc(readFile);
+    if (isdigit(*value)) {
+        double doubleVal = NAN;
+        sscanf(value, "%le", &doubleVal);
+        node->type = NUM;
+        node->val = doubleVal;
+    } else if (*value == '-') {
+        if (*(value + 1) != '\0') {
+            double doubleVal = NAN;
+            sscanf(value, "%le", &doubleVal);
+            node->type = NUM;
+            node->val = doubleVal;
+        } else {
+            node->type = OP;
+            node->opt = SUB;
         }
-        ungetc(symb, readFile);
-        // word[wordIndex - 1] = '\0';
-
-        // ungetc(symb, readFile);
-        // addNodeVal(node, word);
-
-        node->right = diffNodeCtor(node);
-        parseNode(node->right, readFile);
+    } else if (*value == '+') {
+        node->type = OP;
+        node->opt = ADD;
+    } else if (*value == '*') {
+        node->type = OP;
+        node->opt = MUL;
+    } else if (*value == '/') {
+        node->type = OP;
+        node->opt = DIV;
     } else {
-        //printf("%c", symb);
-        ungetc(symb, readFile);
+        node->type = VAR;
+        node->var  = value;
     }
 
     return DIFF_OK;
 }
 
+DiffNode_t* parseNode(FILE* readFile) {
+    if (!readFile) return nullptr;
+
+    DiffNode_t* leftNode  = nullptr;
+    DiffNode_t* rightNode = nullptr;
+    DiffNode_t* newNode   = nullptr;
+
+    int symb = getc(readFile);
+    while (symb != EOF) {
+        //printf("%c", symb);
+        if (symb == '(') {
+            newNode = parseNode(readFile);
+
+            if (!leftNode)  leftNode  = newNode;
+            else            rightNode = newNode;
+
+            // printf("\n%s %p %p\n", leftNode->var, rightNode, newNode);
+        } else {
+            char value[MAX_WORD_LENGTH] = "";
+            int valueId = 0;
+            while (symb != '(' && symb != ')') {
+                value[valueId] = (char) symb;
+                //printf("%c", symb);
+                symb = getc(readFile);
+                valueId++;
+            }
+
+            newNode = diffNodeCtor(nullptr, nullptr, nullptr);
+            // TODO: check for null
+            addNodeVal(newNode, value);
+
+            if (newNode->type == OP) {
+                newNode->left = leftNode;
+                newNode->right = rightNode;
+            }
+        }
+        symb = getc(readFile);
+    }
+
+    return newNode;
+}
+
 int parseEquation(FILE *readFile) {
     DIFF_CHECK(!readFile, DIFF_FILE_NULL);
 
-    int error = DIFF_OK;
-    DiffNode_t* startNode = diffNodeCtor(nullptr, &error);
-    error |= parseNode(startNode, readFile);
+    DiffNode_t* startNode = parseNode(readFile);
 
-    return error;
+    return DIFF_OK;
 }
 
 int openDiffFile(const char *fileName) {
@@ -94,6 +107,8 @@ int openDiffFile(const char *fileName) {
 
     FILE* readFile = fopen(fileName, "rb");
     DIFF_CHECK(!readFile, DIFF_FILE_NULL);
+
+    // TODO: close file
 
     return parseEquation(readFile);
 }
