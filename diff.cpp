@@ -52,7 +52,7 @@ int addNodeVal(DiffNode_t* node, char* value) {
 }
 
 void parseNode(DiffNode_t** node, FILE* readFile) {
-    if (!readFile) return;
+    if (!readFile || !node) return;
 
     int symb = getc(readFile);
     printf("%c", symb);
@@ -85,7 +85,7 @@ int parseEquation(FILE *readFile) {
 
     DiffNode_t* startNode = diffNodeCtor(nullptr, nullptr);
     parseNode(&startNode, readFile);
-    graphDump(startNode);
+    diffToTex(startNode, "new.tex");
 
     return DIFF_OK;
 }
@@ -95,8 +95,6 @@ int openDiffFile(const char *fileName) {
 
     FILE* readFile = fopen(fileName, "rb");
     DIFF_CHECK(!readFile, DIFF_FILE_NULL);
-
-    // TODO: close file
 
     int err = parseEquation(readFile);
     fclose(readFile);
@@ -111,6 +109,36 @@ void diffNodeDtor(DiffNode_t* node) {
     if (node->right) diffNodeDtor(node->right);
 
     free(node);
+}
+
+void nodeToTex(DiffNode_t* node, FILE *file) {
+    if (!node || !file) return;
+
+    fprintf(file, "(");
+    if (node->left) nodeToTex(node->left, file);
+
+    printNodeVal(node, file);
+
+    if (node->right) nodeToTex(node->right, file);
+    fprintf(file, ")");
+}
+
+int diffToTex(DiffNode_t* startNode, const char* fileName) {
+    DIFF_CHECK(!startNode, DIFF_NULL);
+    DIFF_CHECK(!fileName, DIFF_FILE_NULL);
+
+    FILE *tex = fopen(fileName, "w");
+    DIFF_CHECK(!tex, DIFF_FILE_NULL);
+
+    fprintf(tex, "\\documentclass{article}\n");
+    fprintf(tex, "\\usepackage{amssymb, amsmath, multicol}\n");
+    fprintf(tex, "\\begin{document}\n");
+
+    nodeToTex(startNode, tex);
+
+    fprintf(tex, "\n\\end{document}");
+
+    return DIFF_OK;
 }
 
 void printNodeVal(DiffNode_t* node, FILE* file) {

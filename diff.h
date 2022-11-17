@@ -66,6 +66,10 @@ int openDiffFile(const char *fileName);
 
 void diffNodeDtor(DiffNode_t* node);
 
+void nodeToTex(DiffNode_t* node, FILE *file);
+
+int diffToTex(DiffNode_t* startNode, const char* fileName);
+
 void printNodeVal(DiffNode_t* node, FILE* file);
 
 void graphNode(DiffNode_t *node, FILE *tempFile);
