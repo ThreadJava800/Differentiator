@@ -5,6 +5,7 @@
 #include <math.h>
 #include <malloc.h>
 #include <ctype.h>
+#include <string.h>
 
 const int MAX_WORD_LENGTH = 256;
 

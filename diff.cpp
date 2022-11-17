@@ -17,7 +17,7 @@ int addNodeVal(DiffNode_t* node, char* value) {
     DIFF_CHECK(!node, DIFF_NULL);
     DIFF_CHECK(!value, DIFF_FILE_NULL);
 
-    printf("%s ", value);
+    //printf("%s ", value);
 
     if (isdigit(*value)) {
         double doubleVal = NAN;
@@ -45,7 +45,7 @@ int addNodeVal(DiffNode_t* node, char* value) {
         node->opt = DIV;
     } else {
         node->type = VAR;
-        node->var  = value;
+        node->var  = strdup(value);
     }
 
     return DIFF_OK;
@@ -55,12 +55,12 @@ void parseNode(DiffNode_t** node, FILE* readFile) {
     if (!readFile) return;
 
     int symb = getc(readFile);
+    printf("%c", symb);
     if (symb == ')') {
-        //printf("OK");
-        node = nullptr;
+        *node = nullptr;
         return;
     } else if (symb == '(') {
-        DiffNode_t* newNode = diffNodeCtor(*node, nullptr, nullptr);
+        DiffNode_t* newNode = diffNodeCtor(nullptr, nullptr);
         parseNode(&(newNode->left), readFile);
 
         symb = getc(readFile);
@@ -74,7 +74,6 @@ void parseNode(DiffNode_t** node, FILE* readFile) {
         addNodeVal(newNode, value);
 
         parseNode(&(newNode->right), readFile);
-        //printf("%p %p\n", newNode->left, newNode->right);
         *node = newNode;
     } else {
         ungetc(symb, readFile);
@@ -84,9 +83,8 @@ void parseNode(DiffNode_t** node, FILE* readFile) {
 int parseEquation(FILE *readFile) {
     DIFF_CHECK(!readFile, DIFF_FILE_NULL);
 
-    DiffNode_t* startNode = diffNodeCtor(nullptr, nullptr, nullptr);
+    DiffNode_t* startNode = diffNodeCtor(nullptr, nullptr);
     parseNode(&startNode, readFile);
-    //printf("%d ", startNode->type);
     graphDump(startNode);
 
     return DIFF_OK;
@@ -100,7 +98,10 @@ int openDiffFile(const char *fileName) {
 
     // TODO: close file
 
-    return parseEquation(readFile);
+    int err = parseEquation(readFile);
+    fclose(readFile);
+
+    return err;
 }
 
 void diffNodeDtor(DiffNode_t* node) {
