@@ -17,8 +17,6 @@ int addNodeVal(DiffNode_t* node, char* value) {
     DIFF_CHECK(!node, DIFF_NULL);
     DIFF_CHECK(!value, DIFF_FILE_NULL);
 
-    //printf("%s ", value);
-
     if (isdigit(*value)) {
         double doubleVal = NAN;
         sscanf(value, "%le", &doubleVal);
@@ -55,7 +53,6 @@ void parseNode(DiffNode_t** node, FILE* readFile) {
     if (!readFile || !node) return;
 
     int symb = getc(readFile);
-    printf("%c", symb);
     if (symb == ')') {
         *node = nullptr;
         return;
@@ -85,7 +82,8 @@ int parseEquation(FILE *readFile) {
 
     DiffNode_t* startNode = diffNodeCtor(nullptr, nullptr);
     parseNode(&startNode, readFile);
-    diffToTex(startNode, "new.tex");
+    graphDump(startNode);
+    //diffToTex(startNode, "new.tex");
 
     return DIFF_OK;
 }
