@@ -37,7 +37,6 @@ struct DiffNode_t {
     OpType_t    opt  = OPT_DEFAULT;
     const char *var  = nullptr;
 
-    DiffNode_t *prev  = nullptr;
     DiffNode_t *left  = nullptr;
     DiffNode_t *right = nullptr;
 };
@@ -54,11 +53,11 @@ struct DiffNode_t {
     }                                          \
 }                                               \
 
-DiffNode_t* diffNodeCtor(DiffNode_t* prev, DiffNode_t* left, DiffNode_t* right, int* err = nullptr);
+DiffNode_t* diffNodeCtor(DiffNode_t* left, DiffNode_t* right, int* err = nullptr);
 
 int addNodeVal(DiffNode_t* node, char* value);
 
-DiffNode_t* parseNode(FILE* readFile);
+void parseNode(DiffNode_t** node, FILE* readFile);
 
 int parseEquation(FILE* readFile);
 

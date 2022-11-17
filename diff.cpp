@@ -1,13 +1,12 @@
 #include "diff.h"
 
-DiffNode_t* diffNodeCtor(DiffNode_t* prev, DiffNode_t* left, DiffNode_t* right, int* err) {
+DiffNode_t* diffNodeCtor(DiffNode_t* left, DiffNode_t* right, int* err) {
     DiffNode_t* diffNode = (DiffNode_t*) calloc(1, sizeof(DiffNode_t));
     if (!diffNode) {
         if (err) *err |= DIFF_NO_MEM;
         return nullptr;
     }
 
-    diffNode->prev  = prev;
     diffNode->left  = left;
     diffNode->right = right;
 
@@ -18,7 +17,7 @@ int addNodeVal(DiffNode_t* node, char* value) {
     DIFF_CHECK(!node, DIFF_NULL);
     DIFF_CHECK(!value, DIFF_FILE_NULL);
 
-    printf("%s", value);
+    printf("%s ", value);
 
     if (isdigit(*value)) {
         double doubleVal = NAN;
@@ -52,52 +51,43 @@ int addNodeVal(DiffNode_t* node, char* value) {
     return DIFF_OK;
 }
 
-DiffNode_t* parseNode(FILE* readFile) {
-    if (!readFile) return nullptr;
-
-    DiffNode_t* leftNode  = nullptr;
-    DiffNode_t* rightNode = nullptr;
-    DiffNode_t* newNode   = nullptr;
+void parseNode(DiffNode_t** node, FILE* readFile) {
+    if (!readFile) return;
 
     int symb = getc(readFile);
-    while (symb != EOF) {
-        //printf("%c", symb);
-        if (symb == '(') {
-            newNode = parseNode(readFile);
+    if (symb == ')') {
+        //printf("OK");
+        node = nullptr;
+        return;
+    } else if (symb == '(') {
+        DiffNode_t* newNode = diffNodeCtor(*node, nullptr, nullptr);
+        parseNode(&(newNode->left), readFile);
 
-            if (!leftNode)  leftNode  = newNode;
-            else            rightNode = newNode;
-
-            // printf("\n%s %p %p\n", leftNode->var, rightNode, newNode);
-        } else {
-            char value[MAX_WORD_LENGTH] = "";
-            int valueId = 0;
-            while (symb != '(' && symb != ')') {
-                value[valueId] = (char) symb;
-                //printf("%c", symb);
-                symb = getc(readFile);
-                valueId++;
-            }
-
-            newNode = diffNodeCtor(nullptr, nullptr, nullptr);
-            // TODO: check for null
-            addNodeVal(newNode, value);
-
-            if (newNode->type == OP) {
-                newNode->left = leftNode;
-                newNode->right = rightNode;
-            }
-        }
         symb = getc(readFile);
-    }
+        if (symb != '(' && symb != ')') {
+            ungetc(symb, readFile);
+        }
 
-    return newNode;
+        char value[MAX_WORD_LENGTH] = "";
+        fscanf(readFile, "%[^()\t\n]", value);
+
+        addNodeVal(newNode, value);
+
+        parseNode(&(newNode->right), readFile);
+        //printf("%p %p\n", newNode->left, newNode->right);
+        *node = newNode;
+    } else {
+        ungetc(symb, readFile);
+    }
 }
 
 int parseEquation(FILE *readFile) {
     DIFF_CHECK(!readFile, DIFF_FILE_NULL);
 
-    DiffNode_t* startNode = parseNode(readFile);
+    DiffNode_t* startNode = diffNodeCtor(nullptr, nullptr, nullptr);
+    parseNode(&startNode, readFile);
+    //printf("%d ", startNode->type);
+    graphDump(startNode);
 
     return DIFF_OK;
 }
@@ -174,14 +164,17 @@ void graphNode(DiffNode_t *node, FILE *tempFile) {
     
     fprintf(
                 tempFile, 
-                " | {left: %p | right: %p} | previous: %p }}\"];\n", 
+                " | {left: %p | right: %p} | current: %p }}\"];\n", 
                 node->left,
                 node->right,
-                node->prev
+                node
             );
 
-    if (node->prev) {
-        fprintf(tempFile, "\tlabel%p->label%p [color=\"red\", style=\"dashed\",arrowhead=\"none\"]", node->prev, node);
+    if (node->left) {
+        fprintf(tempFile, "\tlabel%p->label%p [color=\"red\", style=\"dashed\",arrowhead=\"none\"]", node->left, node);
+    }
+    if (node->right) {
+        fprintf(tempFile, "\tlabel%p->label%p [color=\"red\", style=\"dashed\",arrowhead=\"none\"]", node->right, node);
     }
 
     if (node->left) graphNode(node->left, tempFile);
