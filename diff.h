@@ -29,6 +29,7 @@ enum OpType_t {
     ADD         =  1,
     DIV         =  2,
     SUB         =  3,
+    POW         =  4,
     OPT_DEFAULT = -1,
 };
 
@@ -61,6 +62,12 @@ int addNodeVal(DiffNode_t* node, char* value);
 void parseNode(DiffNode_t** node, FILE* readFile);
 
 int parseEquation(FILE* readFile);
+
+DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy);
+
+void nodeDiff(DiffNode_t* node);
+
+int equDiff(DiffNode_t* start);
 
 int openDiffFile(const char *fileName);
 

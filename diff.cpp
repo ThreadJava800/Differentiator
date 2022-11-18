@@ -32,6 +32,7 @@ int addNodeVal(DiffNode_t* node, char* value) {
             node->type = OP;
             node->opt = SUB;
         }
+        // TODO: change to switch-case
     } else if (*value == '+') {
         node->type = OP;
         node->opt = ADD;
@@ -41,6 +42,9 @@ int addNodeVal(DiffNode_t* node, char* value) {
     } else if (*value == '/') {
         node->type = OP;
         node->opt = DIV;
+    } else if (*value == '^') {
+        node->type = OP;
+        node->opt = POW;
     } else {
         node->type = VAR;
         node->var  = strdup(value);
@@ -82,8 +86,85 @@ int parseEquation(FILE *readFile) {
 
     DiffNode_t* startNode = diffNodeCtor(nullptr, nullptr);
     parseNode(&startNode, readFile);
+    //diffToTex(startNode, "new.tex");
+
+    equDiff(startNode);
     graphDump(startNode);
     //diffToTex(startNode, "new.tex");
+
+    diffNodeDtor(startNode);
+
+    return DIFF_OK;
+}
+
+DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy) {
+    if (!nodeToCopy) return nullptr;
+
+    DiffNode_t* node = (DiffNode_t*) calloc(sizeof(DiffNode_t), 1);
+    memcpy(node, nodeToCopy, sizeof(DiffNode_t));
+    if (nodeToCopy->left)  {
+        node->left = nodeCopy(nodeToCopy->left);
+    }
+    if (nodeToCopy->right) {
+        node->right = nodeCopy(nodeToCopy->right);
+    }
+
+    return node;
+}
+
+void nodeDiff(DiffNode_t* node) {
+    if (!node) return;
+
+    if (node->type == NUM) {
+        node->val = 0;
+        return;
+    } else if (node->type == VAR) {
+        node->type = NUM;
+        node->val  = 1;
+        return;
+    } else {
+        switch(node->opt) {
+            case ADD:
+            case SUB:
+                nodeDiff(node->left);
+                nodeDiff(node->right);
+                break;
+            case MUL:
+            {
+                // TODO: to function
+                DiffNode_t* interimNode1 = diffNodeCtor(nullptr, nullptr);
+                DiffNode_t* interimNode2 = diffNodeCtor(nullptr, nullptr);
+                if (!interimNode1 || !interimNode2) break;
+
+                interimNode1->type = interimNode2->type = OP;
+                interimNode1->opt  = interimNode2->opt  = MUL;
+
+                interimNode1->right = nodeCopy(node->right);
+                DiffNode_t* leftNotDiffed = nodeCopy(node->left);
+                nodeDiff(node->left);
+                interimNode1->left = node->left;
+
+                interimNode2->left = leftNotDiffed;
+                nodeDiff(node->right);
+                interimNode2->right = node->right;
+
+                node->opt = ADD;
+
+                node->left  = interimNode1;
+                node->right = interimNode2;
+
+                break;
+            }
+            default:
+                break;
+        }
+    }
+}
+
+int equDiff(DiffNode_t* start) {
+    DIFF_CHECK(!start, DIFF_NULL);
+
+    nodeDiff(start);
 
     return DIFF_OK;
 }
