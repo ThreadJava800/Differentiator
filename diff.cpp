@@ -107,7 +107,7 @@ int parseEquation(FILE *readFile) {
     equDiff(startNode);
     easierEqu(startNode);
     graphDump(startNode);
-    //diffToTex(startNode, "new.tex");
+    diffToTex(startNode, "new.tex");
 
     diffNodeDtor(startNode);
 
@@ -399,16 +399,67 @@ void diffNodeDtor(DiffNode_t* node) {
     free(node);
 }
 
-void nodeToTex(DiffNode_t* node, FILE *file) {
+void anyTex(DiffNode_t* node, const char* oper, FILE* file) {
     if (!node || !file) return;
 
     fprintf(file, "(");
     if (node->left) nodeToTex(node->left, file);
-
-    printNodeVal(node, file);
-
+    fprintf(file, ")");
+    fprintf(file, "%s", oper);
+    fprintf(file, "(");
     if (node->right) nodeToTex(node->right, file);
     fprintf(file, ")");
+}
+
+void divTex(DiffNode_t* node, FILE* file) {
+    if (!node || !file) return;
+
+    fprintf(file, "\\frac{");
+    if (node->left) nodeToTex(node->left, file);
+    fprintf(file, "}{");
+    if (node->right) nodeToTex(node->right, file);
+    fprintf(file, "}");
+}
+
+void nodeToTex(DiffNode_t* node, FILE *file) {
+    if (!node || !file) return;
+
+    switch (node->type) {
+        case OP: 
+            {
+                switch (node->value.opt) {
+                    case MUL:
+                        anyTex(node, "\\cdot", file);
+                        break;
+                    case DIV:
+                        divTex(node, file);
+                        break;
+                    case SUB:
+                        anyTex(node, "-", file);
+                        break;
+                    case ADD:
+                        anyTex(node, "+", file);
+                        break;
+                    case POW:
+                        anyTex(node, "^", file);
+                        break;
+                    case OPT_DEFAULT:
+                    default:
+                        break;
+                }
+            };
+            break;
+        case NUM:
+            fprintf(file, "%lf", node->value.num);
+            break;
+        case VAR:
+            fprintf(file, "%s",  node->value.var);
+            break;
+        case NODET_DEFAULT:
+            break;
+        default:
+            break;
+    }
 }
 
 int diffToTex(DiffNode_t* startNode, const char* fileName) {
@@ -420,11 +471,11 @@ int diffToTex(DiffNode_t* startNode, const char* fileName) {
 
     fprintf(tex, "\\documentclass{article}\n");
     fprintf(tex, "\\usepackage{amssymb, amsmath, multicol}\n");
-    fprintf(tex, "\\begin{document}\n");
+    fprintf(tex, "\\begin{document}\n$");
 
     nodeToTex(startNode, tex);
 
-    fprintf(tex, "\n\\end{document}");
+    fprintf(tex, "$\n\\end{document}");
 
     return DIFF_OK;
 }
