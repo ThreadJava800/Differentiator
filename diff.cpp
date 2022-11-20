@@ -21,33 +21,33 @@ int addNodeVal(DiffNode_t* node, char* value) {
         double doubleVal = NAN;
         sscanf(value, "%le", &doubleVal);
         node->type = NUM;
-        node->val = doubleVal;
+        node->value.num = doubleVal;
     } else if (*value == '-') {
         if (*(value + 1) != '\0') {
             double doubleVal = NAN;
             sscanf(value, "%le", &doubleVal);
             node->type = NUM;
-            node->val = doubleVal;
+            node->value.num = doubleVal;
         } else {
             node->type = OP;
-            node->opt = SUB;
+            node->value.opt = SUB;
         }
         // TODO: change to switch-case
     } else if (*value == '+') {
         node->type = OP;
-        node->opt = ADD;
+        node->value.opt = ADD;
     } else if (*value == '*') {
         node->type = OP;
-        node->opt = MUL;
+        node->value.opt = MUL;
     } else if (*value == '/') {
         node->type = OP;
-        node->opt = DIV;
+        node->value.opt = DIV;
     } else if (*value == '^') {
         node->type = OP;
-        node->opt = POW;
+        node->value.opt = POW;
     } else {
         node->type = VAR;
-        node->var  = strdup(value);
+        node->value.var  = strdup(value);
     }
 
     return DIFF_OK;
@@ -121,7 +121,7 @@ void diffMul(DiffNode_t* node) {
     if (!interimNode1 || !interimNode2) return;
 
     interimNode1->type = interimNode2->type = OP;
-    interimNode1->opt  = interimNode2->opt  = MUL;
+    interimNode1->value.opt  = interimNode2->value.opt  = MUL;
 
     interimNode1->right = nodeCopy(node->right);
     DiffNode_t* leftNotDiffed = nodeCopy(node->left);
@@ -132,7 +132,7 @@ void diffMul(DiffNode_t* node) {
     nodeDiff(node->right);
     interimNode2->right = node->right;
 
-    node->opt = ADD;
+    node->value.opt = ADD;
     node->left  = interimNode1;
     node->right = interimNode2;
 }
@@ -147,16 +147,16 @@ void diffDiv(DiffNode_t* node) {
     if (!interimNode1 || !interimNode2 || !subNode || !powNode) return;
 
     interimNode1->type = interimNode2->type = powNode->type = subNode->type = OP;
-    interimNode1->opt  = interimNode2->opt  = MUL;
-    powNode->opt                            = POW;
-    subNode->opt                            = SUB;
+    interimNode1->value.opt  = interimNode2->value.opt  = MUL;
+    powNode->value.opt                                  = POW;
+    subNode->value.opt                                  = SUB;
 
     DiffNode_t* numerator   = nodeCopy(node->left);
     DiffNode_t* denominator = nodeCopy(node->right);
     powNode->left           = nodeCopy(node->right);
     powNode->right          = diffNodeCtor(nullptr, nullptr);
     powNode->right->type    = NUM;
-    powNode->right->val     = 2;
+    powNode->right->value.num     = 2;
 
     nodeDiff(node->left);
     interimNode1->left  = node->left;
@@ -169,7 +169,7 @@ void diffDiv(DiffNode_t* node) {
     subNode->left  = interimNode1;
     subNode->right = interimNode2;
 
-    node->opt = DIV;
+    node->value.opt = DIV;
     node->left  = subNode;
     node->right = powNode;
 }
@@ -181,28 +181,28 @@ void diffVarPowVal(DiffNode_t* node) {
     DiffNode_t* rightCopy = nodeCopy(node->right);
     DiffNode_t* rightNode = diffNodeCtor(nullptr, nullptr);
     rightNode->type = OP;
-    rightNode->opt  = MUL;
+    rightNode->value.opt  = MUL;
 
     nodeDiff(node->left);
 
     rightNode->type = OP;
-    rightNode->opt  = POW;
+    rightNode->value.opt  = POW;
     LEFT(rightNode) = leftCopy;
 
     RIGHT(rightNode)       = diffNodeCtor(nullptr, nullptr);
     RIGHT(rightNode)->type = OP;
-    RIGHT(rightNode)->opt  = SUB;
+    RIGHT(rightNode)->value.opt  = SUB;
 
     LEFT(RIGHT(rightNode)) = nodeCopy(node->right);
     RIGHT(RIGHT(rightNode)) = diffNodeCtor(nullptr, nullptr);
     RIGHT(RIGHT(rightNode))->type = NUM;
-    RIGHT(RIGHT(rightNode))->val  = 1;
+    RIGHT(RIGHT(rightNode))->value.num  = 1;
 
     DiffNode_t* mulLeftNode = diffNodeCtor(nullptr, nullptr);
     mulLeftNode->right = rightNode;
     mulLeftNode->left  = rightCopy;
 
-    node->opt  = MUL;
+    node->value.opt  = MUL;
     node->right = mulLeftNode;
 }
 
@@ -215,9 +215,9 @@ void diffVarPowVar(DiffNode_t* node) {
 void diffValPowVar(DiffNode_t* node) {
     if (!node) return;
 
-    node->opt = MUL;
+    node->value.opt = MUL;
     nodeDiff(node->right);
-    node->left->val = log(node->left->val);
+    node->left->value.num = log(node->left->value.num);
 }
 
 void diffPow(DiffNode_t* node) {
@@ -233,7 +233,7 @@ void diffPow(DiffNode_t* node) {
         free(LEFT(node));
         free(RIGHT(node));
         node->type = NUM;
-        node->val  = 0;
+        node->value.num  = 0;
     } else {
         return;
     }
@@ -243,14 +243,14 @@ void nodeDiff(DiffNode_t* node) {
     if (!node) return;
 
     if (node->type == NUM) {
-        node->val = 0;
+        node->value.num = 0;
         return;
     } else if (node->type == VAR) {
         node->type = NUM;
-        node->val  = 1;
+        node->value.num  = 1;
         return;
     } else {
-        switch(node->opt) {
+        switch(node->value.opt) {
             case ADD:
             case SUB:
                 nodeDiff(node->left);
@@ -337,7 +337,7 @@ void printNodeVal(DiffNode_t* node, FILE* file) {
     switch (node->type) {
         case OP: 
             {
-                switch (node->opt) {
+                switch (node->value.opt) {
                     case MUL:
                         fprintf(file, "*");
                         break;
@@ -361,10 +361,10 @@ void printNodeVal(DiffNode_t* node, FILE* file) {
             };
             break;
         case NUM:
-            fprintf(file, "%lf", node->val);
+            fprintf(file, "%lf", node->value.num);
             break;
         case VAR:
-            fprintf(file, "%s",  node->var);
+            fprintf(file, "%s",  node->value.var);
             break;
         case NODET_DEFAULT:
             break;

@@ -35,9 +35,13 @@ enum OpType_t {
 
 struct DiffNode_t {
     NodeType_t  type = NODET_DEFAULT;
-    double      val  = NAN;
-    OpType_t    opt  = OPT_DEFAULT;
-    const char *var  = nullptr;
+
+    union value 
+    {
+        double      num;
+        OpType_t    opt;
+        const char *var;
+    } value;
 
     DiffNode_t *left  = nullptr;
     DiffNode_t *right = nullptr;
