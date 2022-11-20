@@ -9,6 +9,8 @@
 
 const int MAX_WORD_LENGTH = 256;
 
+const double EPSILON = 1e-12;
+
 enum DiffError_t {
     DIFF_OK         = 2 << 0,
     DIFF_FILE_NULL  = 2 << 1,
@@ -45,6 +47,7 @@ struct DiffNode_t {
 
     DiffNode_t *left  = nullptr;
     DiffNode_t *right = nullptr;
+    DiffNode_t *prev  = nullptr;
 };
 
 #define LEFT(node)  node->left
@@ -66,11 +69,15 @@ struct DiffNode_t {
     }                                          \
 }                                               \
 
-DiffNode_t* diffNodeCtor(DiffNode_t* left, DiffNode_t* right, int* err = nullptr);
+DiffNode_t* diffNodeCtor(DiffNode_t* left, DiffNode_t* right, DiffNode_t* prev, int* err = nullptr);
+
+bool compDouble(const double value1, const double value2);
 
 // READ TREE FROM FILE
 
 int addNodeVal(DiffNode_t* node, char* value);
+
+void addPrevs(DiffNode_t* start);
 
 void parseNode(DiffNode_t** node, FILE* readFile);
 
@@ -81,6 +88,8 @@ DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy);
 // MAKING TREE EASIER
 
 void easierValVal(DiffNode_t* node);
+
+void easierVarVal(DiffNode_t* node, DiffNode_t* varNode, DiffNode_t* valNode);
 
 void makeNodeEasy(DiffNode_t* node);
 

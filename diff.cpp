@@ -1,6 +1,6 @@
 #include "diff.h"
 
-DiffNode_t* diffNodeCtor(DiffNode_t* left, DiffNode_t* right, int* err) {
+DiffNode_t* diffNodeCtor(DiffNode_t* left, DiffNode_t* right, DiffNode_t* prev, int* err) {
     DiffNode_t* diffNode = (DiffNode_t*) calloc(1, sizeof(DiffNode_t));
     if (!diffNode) {
         if (err) *err |= DIFF_NO_MEM;
@@ -9,8 +9,13 @@ DiffNode_t* diffNodeCtor(DiffNode_t* left, DiffNode_t* right, int* err) {
 
     diffNode->left  = left;
     diffNode->right = right;
+    diffNode->prev  = prev;
 
     return diffNode;
+}
+
+bool compDouble(const double value1, const double value2) {
+    return fabs(value1 - value2) < EPSILON;
 }
 
 int addNodeVal(DiffNode_t* node, char* value) {
@@ -53,6 +58,17 @@ int addNodeVal(DiffNode_t* node, char* value) {
     return DIFF_OK;
 }
 
+void addPrevs(DiffNode_t* start) {
+    if (!start) return;
+
+    if (start->left && start->right) {
+        start->left->prev = start->right->prev = start;
+    }
+
+    if (start->left)  addPrevs(start->left);
+    if (start->right) addPrevs(start->right);
+}
+
 void parseNode(DiffNode_t** node, FILE* readFile) {
     if (!readFile || !node) return;
 
@@ -61,7 +77,7 @@ void parseNode(DiffNode_t** node, FILE* readFile) {
         *node = nullptr;
         return;
     } else if (symb == '(') {
-        DiffNode_t* newNode = diffNodeCtor(nullptr, nullptr);
+        DiffNode_t* newNode = diffNodeCtor(nullptr, nullptr, nullptr);
         parseNode(&(newNode->left), readFile);
 
         symb = getc(readFile);
@@ -84,10 +100,9 @@ void parseNode(DiffNode_t** node, FILE* readFile) {
 int parseEquation(FILE *readFile) {
     DIFF_CHECK(!readFile, DIFF_FILE_NULL);
 
-    DiffNode_t* startNode = diffNodeCtor(nullptr, nullptr);
+    DiffNode_t* startNode = diffNodeCtor(nullptr, nullptr, nullptr);
     parseNode(&startNode, readFile);
-    //diffToTex(startNode, "new.tex");
-    //graphDump(startNode);
+    addPrevs(startNode);
 
     equDiff(startNode);
     easierEqu(startNode);
@@ -142,10 +157,33 @@ void easierValVal(DiffNode_t* node) {
         case POW:
             node->type = NUM;
             node->value.num = pow(LEFT(node)->value.num, RIGHT(node)->value.num);
+            free(LEFT(node));                                                        
+            free(RIGHT(node));                                                        
+            LEFT(node)  = nullptr;                                                     
+            RIGHT(node) = nullptr;                                                      
             break;
         default:
             break;
     }
+}
+
+void easierVarVal(DiffNode_t* node, DiffNode_t* varNode, DiffNode_t* valNode) {
+    if (!node || !varNode) return;
+    
+    if (compDouble(valNode->value.num, 1)) {
+        node->type = VAR;
+        node->value.var = varNode->value.var;
+    } else if (compDouble(valNode->value.num, 0)) {
+        node->type = NUM;
+        node->value.num = 0;
+    } else {
+        return;
+    }
+
+    free(LEFT(node));                                                        
+    free(RIGHT(node));                                                        
+    LEFT(node)  = nullptr;                                                     
+    RIGHT(node) = nullptr;
 }
 
 void makeNodeEasy(DiffNode_t* node) {
@@ -153,7 +191,15 @@ void makeNodeEasy(DiffNode_t* node) {
 
     if (IS_NUM(LEFT(node)) && IS_NUM(RIGHT(node))) {
         easierValVal(node);
+    } else if (IS_NUM(LEFT(node))  && IS_VAR(RIGHT(node))) {
+        easierVarVal(node, RIGHT(node), LEFT(node));
+    } else if (IS_NUM(RIGHT(node)) && IS_VAR(LEFT(node))) {
+        easierVarVal(node, LEFT(node), RIGHT(node));
+    } else {
+        return;
     }
+
+    makeNodeEasy(node->prev);
 }
 
 void easierEqu(DiffNode_t* start) {
@@ -167,12 +213,13 @@ void easierEqu(DiffNode_t* start) {
 void diffMul(DiffNode_t* node) {
     if (!node) return;
 
-    DiffNode_t* interimNode1 = diffNodeCtor(nullptr, nullptr);
-    DiffNode_t* interimNode2 = diffNodeCtor(nullptr, nullptr);
+    DiffNode_t* interimNode1 = diffNodeCtor(nullptr, nullptr, nullptr);
+    DiffNode_t* interimNode2 = diffNodeCtor(nullptr, nullptr, nullptr);
     if (!interimNode1 || !interimNode2) return;
 
     interimNode1->type = interimNode2->type = OP;
     interimNode1->value.opt  = interimNode2->value.opt  = MUL;
+    interimNode1->prev = interimNode2->prev = node;
 
     interimNode1->right = nodeCopy(node->right);
     DiffNode_t* leftNotDiffed = nodeCopy(node->left);
@@ -191,10 +238,10 @@ void diffMul(DiffNode_t* node) {
 void diffDiv(DiffNode_t* node) {
     if (!node) return;
 
-    DiffNode_t* interimNode1 = diffNodeCtor(nullptr, nullptr);
-    DiffNode_t* interimNode2 = diffNodeCtor(nullptr, nullptr);
-    DiffNode_t* subNode      = diffNodeCtor(nullptr, nullptr);
-    DiffNode_t* powNode      = diffNodeCtor(nullptr, nullptr);
+    DiffNode_t* interimNode1 = diffNodeCtor(nullptr, nullptr, node->prev);
+    DiffNode_t* interimNode2 = diffNodeCtor(nullptr, nullptr, node->prev);
+    DiffNode_t* subNode      = diffNodeCtor(nullptr, nullptr, node->prev);
+    DiffNode_t* powNode      = diffNodeCtor(nullptr, nullptr, node->prev);
     if (!interimNode1 || !interimNode2 || !subNode || !powNode) return;
 
     interimNode1->type = interimNode2->type = powNode->type = subNode->type = OP;
@@ -205,7 +252,7 @@ void diffDiv(DiffNode_t* node) {
     DiffNode_t* numerator   = nodeCopy(node->left);
     DiffNode_t* denominator = nodeCopy(node->right);
     powNode->left           = nodeCopy(node->right);
-    powNode->right          = diffNodeCtor(nullptr, nullptr);
+    powNode->right          = diffNodeCtor(nullptr, nullptr, node->prev);
     powNode->right->type    = NUM;
     powNode->right->value.num     = 2;
 
@@ -230,7 +277,7 @@ void diffVarPowVal(DiffNode_t* node) {
 
     DiffNode_t* leftCopy  = nodeCopy(node->left);
     DiffNode_t* rightCopy = nodeCopy(node->right);
-    DiffNode_t* rightNode = diffNodeCtor(nullptr, nullptr);
+    DiffNode_t* rightNode = diffNodeCtor(nullptr, nullptr, node->prev);
     rightNode->type = OP;
     rightNode->value.opt  = MUL;
 
@@ -240,16 +287,16 @@ void diffVarPowVal(DiffNode_t* node) {
     rightNode->value.opt  = POW;
     LEFT(rightNode) = leftCopy;
 
-    RIGHT(rightNode)       = diffNodeCtor(nullptr, nullptr);
+    RIGHT(rightNode)       = diffNodeCtor(nullptr, nullptr, node->prev);
     RIGHT(rightNode)->type = OP;
     RIGHT(rightNode)->value.opt  = SUB;
 
     LEFT(RIGHT(rightNode)) = nodeCopy(node->right);
-    RIGHT(RIGHT(rightNode)) = diffNodeCtor(nullptr, nullptr);
+    RIGHT(RIGHT(rightNode)) = diffNodeCtor(nullptr, nullptr, node->prev);
     RIGHT(RIGHT(rightNode))->type = NUM;
     RIGHT(RIGHT(rightNode))->value.num  = 1;
 
-    DiffNode_t* mulLeftNode = diffNodeCtor(nullptr, nullptr);
+    DiffNode_t* mulLeftNode = diffNodeCtor(nullptr, nullptr, node->prev);
     mulLeftNode->right = rightNode;
     mulLeftNode->left  = rightCopy;
 
@@ -437,10 +484,11 @@ void graphNode(DiffNode_t *node, FILE *tempFile) {
     
     fprintf(
                 tempFile, 
-                " | {left: %p | right: %p} | current: %p }}\"];\n", 
+                " | {left: %p | right: %p} | current: %p | prev %p}}\"];\n", 
                 node->left,
                 node->right,
-                node
+                node,
+                node->prev
             );
 
     if (node->left) {
