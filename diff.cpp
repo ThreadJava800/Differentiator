@@ -90,6 +90,7 @@ int parseEquation(FILE *readFile) {
     //graphDump(startNode);
 
     equDiff(startNode);
+    easierEqu(startNode);
     graphDump(startNode);
     //diffToTex(startNode, "new.tex");
 
@@ -111,6 +112,56 @@ DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy) {
     }
 
     return node;
+}
+
+#define replaceValVal(node, oper) {                                       \
+    (node)->type = NUM;                                                    \
+    (node)->value.num = LEFT(node)->value.num oper RIGHT(node)->value.num;  \
+    free(LEFT(node));                                                        \
+    free(RIGHT(node));                                                        \
+    LEFT(node)  = nullptr;                                                     \
+    RIGHT(node) = nullptr;                                                      \
+}                                                                                \
+
+void easierValVal(DiffNode_t* node) {
+    if (!node) return;
+
+    switch(node->value.opt) {
+        case ADD:
+            replaceValVal(node, +);
+            break;
+        case SUB:
+            replaceValVal(node, -);
+            break;
+        case MUL:
+            replaceValVal(node, *);
+            break;
+        case DIV:
+            replaceValVal(node, /);
+            break;
+        case POW:
+            node->type = NUM;
+            node->value.num = pow(LEFT(node)->value.num, RIGHT(node)->value.num);
+            break;
+        default:
+            break;
+    }
+}
+
+void makeNodeEasy(DiffNode_t* node) {
+    if (!node || !node->left || !node->right) return;
+
+    if (IS_NUM(LEFT(node)) && IS_NUM(RIGHT(node))) {
+        easierValVal(node);
+    }
+}
+
+void easierEqu(DiffNode_t* start) {
+    if (!start) return;
+
+    makeNodeEasy(start);
+    if (start->left)  easierEqu(start->left);
+    if (start->right) easierEqu(start->right);
 }
 
 void diffMul(DiffNode_t* node) {

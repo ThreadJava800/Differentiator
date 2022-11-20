@@ -68,6 +68,8 @@ struct DiffNode_t {
 
 DiffNode_t* diffNodeCtor(DiffNode_t* left, DiffNode_t* right, int* err = nullptr);
 
+// READ TREE FROM FILE
+
 int addNodeVal(DiffNode_t* node, char* value);
 
 void parseNode(DiffNode_t** node, FILE* readFile);
@@ -75,6 +77,16 @@ void parseNode(DiffNode_t** node, FILE* readFile);
 int parseEquation(FILE* readFile);
 
 DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy);
+
+// MAKING TREE EASIER
+
+void easierValVal(DiffNode_t* node);
+
+void makeNodeEasy(DiffNode_t* node);
+
+void easierEqu(DiffNode_t* start);
+
+// ALL FOR DIFF
 
 void diffMul(DiffNode_t* node);
 
@@ -91,6 +103,8 @@ void diffPow(DiffNode_t* node);
 void nodeDiff(DiffNode_t* node);
 
 int equDiff(DiffNode_t* start);
+
+//
 
 int openDiffFile(const char *fileName);
 
