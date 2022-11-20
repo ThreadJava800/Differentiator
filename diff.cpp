@@ -87,6 +87,7 @@ int parseEquation(FILE *readFile) {
     DiffNode_t* startNode = diffNodeCtor(nullptr, nullptr);
     parseNode(&startNode, readFile);
     //diffToTex(startNode, "new.tex");
+    //graphDump(startNode);
 
     equDiff(startNode);
     graphDump(startNode);
@@ -173,6 +174,60 @@ void diffDiv(DiffNode_t* node) {
     node->right = powNode;
 }
 
+void diffVarPowVal(DiffNode_t* node) {
+    if (!node) return;
+
+    DiffNode_t* leftCopy  = nodeCopy(node->left);
+    DiffNode_t* rightNode = diffNodeCtor(nullptr, nullptr);
+    rightNode->type = OP;
+    rightNode->opt  = MUL;
+
+    nodeDiff(node->left);
+
+    rightNode->type = OP;
+    rightNode->opt  = POW;
+    LEFT(rightNode) = leftCopy;
+
+    RIGHT(rightNode)       = diffNodeCtor(nullptr, nullptr);
+    RIGHT(rightNode)->type = OP;
+    RIGHT(rightNode)->opt  = SUB;
+
+    LEFT(RIGHT(rightNode)) = nodeCopy(node->right);
+    RIGHT(RIGHT(rightNode)) = diffNodeCtor(nullptr, nullptr);
+    RIGHT(RIGHT(rightNode))->type = NUM;
+    RIGHT(RIGHT(rightNode))->val  = 1;
+
+    node->opt  = MUL;
+    node->right = rightNode;
+}
+
+void diffVarPowVar(DiffNode_t* node) {
+
+}
+
+void diffValPowVar(DiffNode_t* node) {
+
+}
+
+void diffPow(DiffNode_t* node) {
+    if (!node) return;
+
+    if ((IS_OP(LEFT(node)) || IS_VAR(LEFT(node))) && IS_NUM(RIGHT(node))) {
+        diffVarPowVal(node);
+    } else if ((IS_VAR(LEFT(node)) || IS_OP(LEFT(node))) && (IS_VAR(RIGHT(node)) || IS_OP(RIGHT(node)))) {
+        diffVarPowVar(node);
+    } else if (IS_NUM(LEFT(node)) && (IS_OP(RIGHT(node)) || IS_VAR(RIGHT(node)))) {
+        diffValPowVar(node);
+    } else if (IS_NUM(LEFT(node)) && IS_NUM(RIGHT(node))) {
+        free(LEFT(node));
+        free(RIGHT(node));
+        node->type = NUM;
+        node->val  = 0;
+    } else {
+        return;
+    }
+}
+
 void nodeDiff(DiffNode_t* node) {
     if (!node) return;
 
@@ -195,6 +250,9 @@ void nodeDiff(DiffNode_t* node) {
                 break;
             case DIV:
                 diffDiv(node);
+                break;
+            case POW:
+                diffPow(node);
                 break;
             case OPT_DEFAULT:
             default:
@@ -280,6 +338,9 @@ void printNodeVal(DiffNode_t* node, FILE* file) {
                         break;
                     case ADD:
                         fprintf(file, "+");
+                        break;
+                    case POW:
+                        fprintf(file, "^");
                         break;
                     case OPT_DEFAULT:
                         break;

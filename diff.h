@@ -43,6 +43,13 @@ struct DiffNode_t {
     DiffNode_t *right = nullptr;
 };
 
+#define LEFT(node)  node->left
+#define RIGHT(node) node->right
+
+#define IS_OP(node)  node->type == OP
+#define IS_NUM(node) node->type == NUM
+#define IS_VAR(node) node->type == VAR
+
 #define SKIP_SPACES() {      \
     while (symb == ' ') {     \
         symb = getc(readFile); \
@@ -68,6 +75,14 @@ DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy);
 void diffMul(DiffNode_t* node);
 
 void diffDiv(DiffNode_t* node);
+
+void diffVarPowVal(DiffNode_t* node);
+
+void diffVarPowVar(DiffNode_t* node);
+
+void diffValPowVar(DiffNode_t* node);
+
+void diffPow(DiffNode_t* node);
 
 void nodeDiff(DiffNode_t* node);
 
