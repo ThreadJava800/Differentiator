@@ -65,6 +65,10 @@ int parseEquation(FILE* readFile);
 
 DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy);
 
+void diffMul(DiffNode_t* node);
+
+void diffDiv(DiffNode_t* node);
+
 void nodeDiff(DiffNode_t* node);
 
 int equDiff(DiffNode_t* start);

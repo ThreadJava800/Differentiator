@@ -112,6 +112,67 @@ DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy) {
     return node;
 }
 
+void diffMul(DiffNode_t* node) {
+    if (!node) return;
+
+    DiffNode_t* interimNode1 = diffNodeCtor(nullptr, nullptr);
+    DiffNode_t* interimNode2 = diffNodeCtor(nullptr, nullptr);
+    if (!interimNode1 || !interimNode2) return;
+
+    interimNode1->type = interimNode2->type = OP;
+    interimNode1->opt  = interimNode2->opt  = MUL;
+
+    interimNode1->right = nodeCopy(node->right);
+    DiffNode_t* leftNotDiffed = nodeCopy(node->left);
+    nodeDiff(node->left);
+    interimNode1->left = node->left;
+
+    interimNode2->left = leftNotDiffed;
+    nodeDiff(node->right);
+    interimNode2->right = node->right;
+
+    node->opt = ADD;
+    node->left  = interimNode1;
+    node->right = interimNode2;
+}
+
+void diffDiv(DiffNode_t* node) {
+    if (!node) return;
+
+    DiffNode_t* interimNode1 = diffNodeCtor(nullptr, nullptr);
+    DiffNode_t* interimNode2 = diffNodeCtor(nullptr, nullptr);
+    DiffNode_t* subNode      = diffNodeCtor(nullptr, nullptr);
+    DiffNode_t* powNode      = diffNodeCtor(nullptr, nullptr);
+    if (!interimNode1 || !interimNode2 || !subNode || !powNode) return;
+
+    interimNode1->type = interimNode2->type = powNode->type = subNode->type = OP;
+    interimNode1->opt  = interimNode2->opt  = MUL;
+    powNode->opt                            = POW;
+    subNode->opt                            = SUB;
+
+    DiffNode_t* numerator   = nodeCopy(node->left);
+    DiffNode_t* denominator = nodeCopy(node->right);
+    powNode->left           = nodeCopy(node->right);
+    powNode->right          = diffNodeCtor(nullptr, nullptr);
+    powNode->right->type    = NUM;
+    powNode->right->val     = 2;
+
+    nodeDiff(node->left);
+    interimNode1->left  = node->left;
+    interimNode1->right = denominator;
+
+    nodeDiff(node->right);
+    interimNode2->left  = numerator;
+    interimNode2->right = node->right;
+
+    subNode->left  = interimNode1;
+    subNode->right = interimNode2;
+
+    node->opt = DIV;
+    node->left  = subNode;
+    node->right = powNode;
+}
+
 void nodeDiff(DiffNode_t* node) {
     if (!node) return;
 
@@ -130,31 +191,12 @@ void nodeDiff(DiffNode_t* node) {
                 nodeDiff(node->right);
                 break;
             case MUL:
-            {
-                // TODO: to function
-                DiffNode_t* interimNode1 = diffNodeCtor(nullptr, nullptr);
-                DiffNode_t* interimNode2 = diffNodeCtor(nullptr, nullptr);
-                if (!interimNode1 || !interimNode2) break;
-
-                interimNode1->type = interimNode2->type = OP;
-                interimNode1->opt  = interimNode2->opt  = MUL;
-
-                interimNode1->right = nodeCopy(node->right);
-                DiffNode_t* leftNotDiffed = nodeCopy(node->left);
-                nodeDiff(node->left);
-                interimNode1->left = node->left;
-
-                interimNode2->left = leftNotDiffed;
-                nodeDiff(node->right);
-                interimNode2->right = node->right;
-
-                node->opt = ADD;
-
-                node->left  = interimNode1;
-                node->right = interimNode2;
-
+                diffMul(node);
                 break;
-            }
+            case DIV:
+                diffDiv(node);
+                break;
+            case OPT_DEFAULT:
             default:
                 break;
         }
