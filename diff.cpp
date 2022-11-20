@@ -403,11 +403,11 @@ void anyTex(DiffNode_t* node, const char* oper, FILE* file) {
     if (!node || !file) return;
 
     fprintf(file, "(");
-    if (node->left) nodeToTex(node->left, file);
+    nodeToTex(node->left, file);
     fprintf(file, ")");
     fprintf(file, "%s", oper);
     fprintf(file, "(");
-    if (node->right) nodeToTex(node->right, file);
+    nodeToTex(node->right, file);
     fprintf(file, ")");
 }
 
@@ -415,9 +415,9 @@ void divTex(DiffNode_t* node, FILE* file) {
     if (!node || !file) return;
 
     fprintf(file, "\\frac{");
-    if (node->left) nodeToTex(node->left, file);
+    nodeToTex(node->left, file);
     fprintf(file, "}{");
-    if (node->right) nodeToTex(node->right, file);
+    nodeToTex(node->right, file);
     fprintf(file, "}");
 }
 
