@@ -89,11 +89,11 @@ DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy);
 
 void easierValVal(DiffNode_t* node);
 
-void easierVarVal(DiffNode_t* node, DiffNode_t* varNode, DiffNode_t* valNode);
+void easierVarVal(DiffNode_t** rootNode, DiffNode_t* node, DiffNode_t* varNode, DiffNode_t* valNode);
 
-void makeNodeEasy(DiffNode_t* node);
+void makeNodeEasy(DiffNode_t** rootNode, DiffNode_t* node);
 
-void easierEqu(DiffNode_t* start);
+void easierEqu(DiffNode_t** rootNode, DiffNode_t* start);
 
 // ALL FOR DIFF
 
