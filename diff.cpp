@@ -123,7 +123,7 @@ int parseEquation(FILE *readFile) {
     equDiff(startNode);
     addPrevs(startNode);
 
-    //easierEqu(startNode);
+    easierEqu(startNode);
     graphDump(startNode);
     //diffToTex(startNode, "new.tex");
 
@@ -198,7 +198,9 @@ void easierValVal(DiffNode_t* node) {
 
 void easierVarVal(DiffNode_t* node, DiffNode_t* varNode, DiffNode_t* valNode) {
     if (!node || !varNode) return;
-    
+    if (IS_COS(node) || IS_SIN(node) || IS_LN(node)) return;
+    if (IS_DIV(node) && IS_NUM(LEFT(node))) return;
+
     if (compDouble(valNode->value.num, 1)) {
         hangNode(valNode->prev, varNode);
         free(valNode);
@@ -533,6 +535,9 @@ void nodeToTex(DiffNode_t* node, FILE *file) {
                     case POW:
                         powTex(node, file);
                         break;
+                    case COS:
+                    case SIN:
+                    case LN:
                     case OPT_DEFAULT:
                     default:
                         break;

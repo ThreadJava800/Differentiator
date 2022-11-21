@@ -60,6 +60,11 @@ struct DiffNode_t {
 #define IS_NUM(node) node->type == NUM
 #define IS_VAR(node) node->type == VAR
 
+#define IS_COS(node) node->value.opt == COS
+#define IS_SIN(node) node->value.opt == SIN
+#define IS_LN(node) node->value.opt == LN
+#define IS_DIV(node) node->value.opt == DIV
+
 #define SKIP_SPACES() {      \
     while (symb == ' ') {     \
         symb = getc(readFile); \
