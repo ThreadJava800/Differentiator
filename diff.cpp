@@ -18,6 +18,8 @@ bool compDouble(const double value1, const double value2) {
     return fabs(value1 - value2) < EPSILON;
 }
 
+// PARSER
+
 int addNodeVal(DiffNode_t* node, char* value) {
     DIFF_CHECK(!node, DIFF_NULL);
     DIFF_CHECK(!value, DIFF_FILE_NULL);
@@ -163,6 +165,8 @@ void hangNode(DiffNode_t* node, const DiffNode_t* info) {
     node->left  = info->left;
 }
 
+// EASIER SECTION
+
 void easierValVal(DiffNode_t* node) {
     if (!node) return;
 
@@ -240,6 +244,8 @@ void easierEqu(DiffNode_t* start) {
     if (start->left)  easierEqu(start->left);
     if (start->right) easierEqu(start->right);
 }
+
+// DIFF SECTION
 
 void diffMul(DiffNode_t* node) {
     if (!node) return;
@@ -498,6 +504,8 @@ void diffNodeDtor(DiffNode_t* node) {
     free(node);
 }
 
+// TEX
+
 void anyTex(DiffNode_t* node, const char* oper, FILE* file) {
     if (!node || !oper || !file) return;
 
@@ -593,6 +601,8 @@ int diffToTex(DiffNode_t* startNode, const char* fileName) {
 
     return DIFF_OK;
 }
+
+// VISUAL DUMP
 
 void printNodeVal(DiffNode_t* node, FILE* file) {
     if (!node || !file) return;
