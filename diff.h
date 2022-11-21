@@ -32,6 +32,9 @@ enum OpType_t {
     DIV         =  2,
     SUB         =  3,
     POW         =  4,
+    SIN         =  5,
+    COS         =  6,
+    LN          =  7,
     OPT_DEFAULT = -1,
 };
 
@@ -110,6 +113,10 @@ void diffVarPowVar(DiffNode_t* node);
 void diffValPowVar(DiffNode_t* node);
 
 void diffPow(DiffNode_t* node);
+
+void diffCos(DiffNode_t* node);
+
+void diffLn(DiffNode_t* node);
 
 void nodeDiff(DiffNode_t* node);
 

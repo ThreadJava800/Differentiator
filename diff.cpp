@@ -37,22 +37,38 @@ int addNodeVal(DiffNode_t* node, char* value) {
             node->type = OP;
             node->value.opt = SUB;
         }
-        // TODO: change to switch-case
-    } else if (*value == '+') {
+    } else if (strcasecmp(value, "sin") == 0) {
         node->type = OP;
-        node->value.opt = ADD;
-    } else if (*value == '*') {
+        node->value.opt = SIN;
+    } else if (strcasecmp(value, "cos") == 0) {
         node->type = OP;
-        node->value.opt = MUL;
-    } else if (*value == '/') {
+        node->value.opt = COS;
+    } else if (strcasecmp(value, "ln")  == 0) {
         node->type = OP;
-        node->value.opt = DIV;
-    } else if (*value == '^') {
-        node->type = OP;
-        node->value.opt = POW;
+        node->value.opt = LN;
     } else {
-        node->type = VAR;
-        node->value.var  = strdup(value);
+        switch(*value) {
+            case '+':
+                node->type = OP;
+                node->value.opt = ADD;
+                break;
+            case '*':
+                node->type = OP;
+                node->value.opt = MUL;
+                break;
+            case '/':
+                node->type = OP;
+                node->value.opt = DIV;
+                break;
+            case '^':
+                node->type = OP;
+                node->value.opt = POW;
+                break;
+            default:
+                node->type = VAR;
+                node->value.var  = strdup(value);
+                break;
+        }
     }
 
     return DIFF_OK;
@@ -106,7 +122,8 @@ int parseEquation(FILE *readFile) {
 
     equDiff(startNode);
     addPrevs(startNode);
-    easierEqu(startNode);
+
+    //easierEqu(startNode);
     graphDump(startNode);
     //diffToTex(startNode, "new.tex");
 
@@ -133,9 +150,9 @@ DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy) {
 #define replaceValVal(node, oper) {                                       \
     (node)->type = NUM;                                                    \
     (node)->value.num = LEFT(node)->value.num oper RIGHT(node)->value.num;  \
-    LEFT(node)  = nullptr;                                                     \
-    RIGHT(node) = nullptr;                                                      \
-}                                                                                \
+    LEFT(node)  = nullptr;                                                   \
+    RIGHT(node) = nullptr;                                                    \
+}                                                                              \
 
 void hangNode(DiffNode_t* node, const DiffNode_t* info) {
     if (!node || !info) return;
@@ -170,6 +187,10 @@ void easierValVal(DiffNode_t* node) {
             LEFT(node)  = nullptr;                                                     
             RIGHT(node) = nullptr;                                                      
             break;
+        case OPT_DEFAULT:
+        case LN:
+        case COS:
+        case SIN:
         default:
             break;
     }
@@ -178,7 +199,6 @@ void easierValVal(DiffNode_t* node) {
 void easierVarVal(DiffNode_t* node, DiffNode_t* varNode, DiffNode_t* valNode) {
     if (!node || !varNode) return;
     
-    // TODO: pow
     if (compDouble(valNode->value.num, 1)) {
         hangNode(valNode->prev, varNode);
         free(valNode);
@@ -346,6 +366,46 @@ void diffPow(DiffNode_t* node) {
     }
 }
 
+void diffCos(DiffNode_t* node) {
+    if (!node) return;
+
+    node->value.opt = SIN;
+    DiffNode_t* newRight = nodeCopy(node);
+    DiffNode_t* newLeft = diffNodeCtor(nullptr, nullptr, nullptr);
+    newLeft->type = OP;
+    newLeft->value.opt = MUL;
+    LEFT(newLeft) = diffNodeCtor(nullptr, nullptr, newLeft);
+    LEFT(newLeft)->type = NUM;
+    LEFT(newLeft)->value.num = -1;
+    
+    nodeDiff(node->right);
+    RIGHT(newLeft) = node->right;
+
+    node->value.opt = MUL;
+    node->right = newRight;
+    node->left  = newLeft;
+}
+
+void diffLn(DiffNode_t* node) {
+    if (!node) return;
+
+    DiffNode_t* rightCopy = nodeCopy(node->right);
+
+    DiffNode_t* divNode  = diffNodeCtor(nullptr, nullptr, nullptr);
+    divNode->type = OP;
+    divNode->value.opt = DIV;
+    LEFT(divNode) = diffNodeCtor(nullptr, nullptr, nullptr);
+    LEFT(divNode)->type = NUM;
+    LEFT(divNode)->value.num = 1;
+    RIGHT(divNode) = nodeCopy(node->right);
+
+    node->value.opt = MUL;
+    node->right = divNode;
+
+    nodeDiff(rightCopy);
+    node->left = rightCopy;
+}
+
 void nodeDiff(DiffNode_t* node) {
     if (!node) return;
 
@@ -371,6 +431,15 @@ void nodeDiff(DiffNode_t* node) {
                 break;
             case POW:
                 diffPow(node);
+                break;
+            case SIN:
+                node->value.opt = COS;
+                break;
+            case COS:
+                diffCos(node);
+                break;
+            case LN:
+                diffLn(node);
                 break;
             case OPT_DEFAULT:
             default:
@@ -522,6 +591,15 @@ void printNodeVal(DiffNode_t* node, FILE* file) {
                         break;
                     case POW:
                         fprintf(file, "^");
+                        break;
+                    case SIN:
+                        fprintf(file, "SIN");
+                        break;
+                    case COS:
+                        fprintf(file, "COS");
+                        break;
+                    case LN:
+                        fprintf(file, "LN");
                         break;
                     case OPT_DEFAULT:
                         break;
