@@ -133,8 +133,6 @@ DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy) {
 #define replaceValVal(node, oper) {                                       \
     (node)->type = NUM;                                                    \
     (node)->value.num = LEFT(node)->value.num oper RIGHT(node)->value.num;  \
-    free(LEFT(node));                                                        \
-    free(RIGHT(node));                                                        \
     LEFT(node)  = nullptr;                                                     \
     RIGHT(node) = nullptr;                                                      \
 }                                                                                \
@@ -186,7 +184,12 @@ void easierVarVal(DiffNode_t* node, DiffNode_t* varNode, DiffNode_t* valNode) {
         free(valNode);
     } else if (compDouble(valNode->value.num, 0)) {
         node->type = NUM;
-        node->value.num = 0;
+        if (node->value.opt == POW) {
+            node->value.num = 1;
+        } else {
+            node->value.num = 0;
+        }
+        node->left = node->right = nullptr;
     } else {
         return;
     }
