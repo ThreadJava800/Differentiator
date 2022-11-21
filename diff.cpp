@@ -338,7 +338,26 @@ void diffVarPowVal(DiffNode_t* node) {
 void diffVarPowVar(DiffNode_t* node) {
     if (!node) return;
 
-    // TODO: add ln
+    DiffNode_t* rootCopy = nodeCopy(node);
+    node->left = nodeCopy(node);
+    node->value.opt = MUL;
+
+    DiffNode_t* rightNode = diffNodeCtor(nullptr, nullptr, nullptr);
+    DiffNode_t* lnNode    = diffNodeCtor(nullptr, nullptr, nullptr);
+
+    lnNode->type = OP;
+    lnNode->value.opt = LN;
+
+    LEFT(lnNode) = diffNodeCtor(nullptr, nullptr, nullptr);
+    LEFT(lnNode)->type = NUM;
+    LEFT(lnNode)->value.num = 0;
+    RIGHT(lnNode) = LEFT(rootCopy);
+
+    LEFT(rightNode) = RIGHT(rootCopy);
+    RIGHT(rightNode) = lnNode;
+
+    nodeDiff(rightNode);
+    node->right = rightNode;
 }
 
 void diffValPowVar(DiffNode_t* node) {
