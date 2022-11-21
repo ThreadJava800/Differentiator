@@ -106,7 +106,7 @@ int parseEquation(FILE *readFile) {
 
     equDiff(startNode);
     addPrevs(startNode);
-    easierEqu(&startNode, startNode);
+    easierEqu(startNode);
     graphDump(startNode);
     //diffToTex(startNode, "new.tex");
 
@@ -139,6 +139,15 @@ DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy) {
     RIGHT(node) = nullptr;                                                      \
 }                                                                                \
 
+void hangNode(DiffNode_t* node, const DiffNode_t* info) {
+    if (!node || !info) return;
+
+    node->type  = info->type;
+    node->value = info->value;
+    node->right = info->right;
+    node->left  = info->left;
+}
+
 void easierValVal(DiffNode_t* node) {
     if (!node) return;
 
@@ -168,53 +177,43 @@ void easierValVal(DiffNode_t* node) {
     }
 }
 
-void easierVarVal(DiffNode_t** rootNode, DiffNode_t* node, DiffNode_t* varNode, DiffNode_t* valNode) {
-    if (!rootNode || !node || !varNode) return;
+void easierVarVal(DiffNode_t* node, DiffNode_t* varNode, DiffNode_t* valNode) {
+    if (!node || !varNode) return;
     
     // TODO: pow
     if (compDouble(valNode->value.num, 1)) {
-        if (valNode->prev == *rootNode) {
-            *rootNode = varNode;
-        } else {
-            valNode->prev = varNode;
-            valNode->prev->prev = nullptr;
-        }
-        //printf("%p", varNode);
+        hangNode(valNode->prev, varNode);
+        free(valNode);
     } else if (compDouble(valNode->value.num, 0)) {
         node->type = NUM;
         node->value.num = 0;
     } else {
         return;
     }
-
-    // free(LEFT(node));                                                        
-    // free(RIGHT(node));                                                        
-    // LEFT(node)  = nullptr;                                                     
-    // RIGHT(node) = nullptr;
 }
 
-void makeNodeEasy(DiffNode_t** rootNode, DiffNode_t* node) {
-    if (!rootNode || !node || !node->left || !node->right) return;
+void makeNodeEasy(DiffNode_t* node) {
+    if (!node || !node->left || !node->right) return;
 
     if (IS_NUM(LEFT(node)) && IS_NUM(RIGHT(node))) {
         easierValVal(node);
     } else if (IS_NUM(LEFT(node))) {
-        easierVarVal(rootNode, node, RIGHT(node), LEFT(node));
+        easierVarVal(node, RIGHT(node), LEFT(node));
     } else if (IS_NUM(RIGHT(node))) {
-        easierVarVal(rootNode, node, LEFT(node), RIGHT(node));
+        easierVarVal(node, LEFT(node), RIGHT(node));
     } else {
         return;
     }
 
-    makeNodeEasy(rootNode, node->prev);
+    makeNodeEasy(node->prev);
 }
 
-void easierEqu(DiffNode_t** rootNode, DiffNode_t* start) {
+void easierEqu(DiffNode_t* start) {
     if (!start) return;
 
-    makeNodeEasy(rootNode, start);
-    if (start->left)  easierEqu(rootNode, start->left);
-    if (start->right) easierEqu(rootNode, start->right);
+    makeNodeEasy(start);
+    if (start->left)  easierEqu(start->left);
+    if (start->right) easierEqu(start->right);
 }
 
 void diffMul(DiffNode_t* node) {
