@@ -121,6 +121,8 @@ void diffNodeDtor(DiffNode_t* node);
 
 void anyTex(DiffNode_t* node, const char* oper, FILE* file);
 
+void powTex(DiffNode_t* node, FILE* file);
+
 void divTex(DiffNode_t* node, FILE* file);
 
 void nodeToTex(DiffNode_t* node, FILE *file);

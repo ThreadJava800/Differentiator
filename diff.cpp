@@ -400,15 +400,27 @@ void diffNodeDtor(DiffNode_t* node) {
 }
 
 void anyTex(DiffNode_t* node, const char* oper, FILE* file) {
+    if (!node || !oper || !file) return;
+
+    if (!(IS_NUM(LEFT(node)) || IS_VAR(LEFT(node)))) fprintf(file, "(");
+    nodeToTex(node->left, file);
+    if (!(IS_NUM(LEFT(node)) || IS_VAR(LEFT(node)))) fprintf(file, ")");
+
+    fprintf(file, "%s", oper);
+
+    if (!(IS_NUM(RIGHT(node)) || IS_VAR(RIGHT(node)))) fprintf(file, "(");
+    nodeToTex(node->right, file);
+    if (!(IS_NUM(RIGHT(node)) || IS_VAR(RIGHT(node)))) fprintf(file, ")");
+}
+
+void powTex(DiffNode_t* node, FILE* file) {
     if (!node || !file) return;
 
-    fprintf(file, "(");
+    fprintf(file, "{");
     nodeToTex(node->left, file);
-    fprintf(file, ")");
-    fprintf(file, "%s", oper);
-    fprintf(file, "(");
+    fprintf(file, "}^{");
     nodeToTex(node->right, file);
-    fprintf(file, ")");
+    fprintf(file, "}");
 }
 
 void divTex(DiffNode_t* node, FILE* file) {
@@ -429,19 +441,19 @@ void nodeToTex(DiffNode_t* node, FILE *file) {
             {
                 switch (node->value.opt) {
                     case MUL:
-                        anyTex(node, "\\cdot", file);
+                        anyTex(node, " \\cdot ", file);
                         break;
                     case DIV:
                         divTex(node, file);
                         break;
                     case SUB:
-                        anyTex(node, "-", file);
+                        anyTex(node, " - ", file);
                         break;
                     case ADD:
-                        anyTex(node, "+", file);
+                        anyTex(node, " + ", file);
                         break;
                     case POW:
-                        anyTex(node, "^", file);
+                        powTex(node, file);
                         break;
                     case OPT_DEFAULT:
                     default:
