@@ -14,7 +14,7 @@ const double EPSILON = 1e-12;
 
 const int MAX_REPLACE_COUNT = 26;
 
-const int NEED_TEX_REPLACEMENT = 4;
+const int NEED_TEX_REPLACEMENT = 3;
 
 const char phrases[][MAX_WORD_LENGTH] = {
     "Совершенно очевидно, что\\n\\n\n",

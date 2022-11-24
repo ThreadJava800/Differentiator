@@ -156,11 +156,7 @@ DiffNode_t* parseEquation(FILE *readFile) {
     // printLineToTex(texFile, "После очевидных упрощений имеем:\n");
     // easierEqu(startNode);
 
-    printLineToTex(texFile, "$$");
     diffToTex(startNode, texFile);
-    printLineToTex(texFile, "$$\\\\\\\\\n");
-
-    //diffNodeDtor(startNode);
 
     return startNode;
 }
@@ -520,11 +516,10 @@ void nodeDiff(DiffNode_t* node) {
     }
 
     printRandomPhrase(texFile);
-    printLineToTex(texFile, "$$(");
-    diffToTex(startNode, texFile);
-    printLineToTex(texFile, ")' = ");
+    printLineToTex(texFile, "\\\\$(");
+    nodeToTex(startNode, texFile);
+    printLineToTex(texFile, ")'$ = ");
     diffToTex(node, texFile);
-    printLineToTex(texFile, "$$\\\\\\\\\n");
     diffNodeDtor(startNode);
 }
 
@@ -672,16 +667,18 @@ void printNodeReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int 
 void printTexReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize) {
     if (!node || !file || !replaced) return;
 
+    fprintf(file, "$");
+    printNodeReplaced(node, file, replaced, replacedSize);
+    fprintf(file, "$\\\\");
+
     if (replacedSize != 0) {
-        fprintf(file, "Введём следующие обозначения:\\n\n");
+        fprintf(file, "\\\\ где:\\\\\n");
     }
     for (int i = 0; i < replacedSize; i++) {
-        fprintf(file, "%c = ", 65 + i);
+        fprintf(file, "%c = $", 65 + i);
         nodeToTex(replaced[i], file);
-        fprintf(file, "\n");
+        fprintf(file, "$\\\\\n");
     }
-
-    printNodeReplaced(node, file, replaced, replacedSize);
 }
 
 void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex) {
@@ -704,10 +701,6 @@ void makeReplacements(DiffNode_t* start, FILE* file) {
     DiffNode_t** replacedNodes = (DiffNode_t**) calloc(MAX_REPLACE_COUNT, sizeof(DiffNode_t*));
     int replacedIndex = 0;
     replaceNode(start, replacedNodes, &replacedIndex);
-
-    // for (int i = 0; i < replacedIndex; i++) {
-    //     printf("%p %c\n", replacedNodes[i], 65 + i);
-    // }
 
     printTexReplaced(start, file, replacedNodes, replacedIndex);
 }
