@@ -121,6 +121,8 @@ void diffPow(DiffNode_t* node);
 
 void diffCos(DiffNode_t* node);
 
+void diffSin(DiffNode_t* node);
+
 void diffLn(DiffNode_t* node);
 
 void nodeDiff(DiffNode_t* node);
@@ -138,6 +140,8 @@ void anyTex(DiffNode_t* node, const char* oper, FILE* file);
 void powTex(DiffNode_t* node, FILE* file);
 
 void divTex(DiffNode_t* node, FILE* file);
+
+void triglogTex(DiffNode_t* node, FILE* file, const char* prep);
 
 void nodeToTex(DiffNode_t* node, FILE *file);
 

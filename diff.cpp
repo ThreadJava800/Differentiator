@@ -125,15 +125,20 @@ DiffNode_t* parseEquation(FILE *readFile) {
     parseNode(&startNode, readFile);
     addPrevs(startNode);
 
+    // graphDump(startNode);
+
     equDiff(startNode);
     addPrevs(startNode);
 
-    // graphDump(startNode);
+    graphDump(startNode);
 
-    // easierEqu(startNode);
-    // graphDump(startNode);
-    // diffToTex(startNode, "new.tex");
-    // nodeToTex(startNode, texFile);
+    printLineToTex(texFile, "После очевидных упрощений имеем:\n");
+
+    easierEqu(startNode);
+
+    printLineToTex(texFile, "$$");
+    diffToTex(startNode, texFile);
+    printLineToTex(texFile, "$$\\\\\\\\\n");
 
     diffNodeDtor(startNode);
 
@@ -246,9 +251,7 @@ void makeNodeEasy(DiffNode_t* node) {
 void easierEqu(DiffNode_t* start) {
     if (!start) return;
 
-    diffToTex(start, texFile);
     makeNodeEasy(start);
-    diffToTex(start, texFile);
     if (start->left)  easierEqu(start->left);
     if (start->right) easierEqu(start->right);
 }
@@ -421,6 +424,18 @@ void diffCos(DiffNode_t* node) {
     node->left  = newLeft;
 }
 
+void diffSin(DiffNode_t* node) {
+    if (!node) return;
+
+    node->value.opt = COS;
+    DiffNode_t* newRight = nodeCopy(node);
+
+    node->type = OP;
+    node->value.opt = MUL;
+    node->left = newRight;
+    nodeDiff(node->right);
+}
+
 void diffLn(DiffNode_t* node) {
     if (!node) return;
 
@@ -470,7 +485,7 @@ void nodeDiff(DiffNode_t* node) {
                 diffPow(node);
                 break;
             case SIN:
-                node->value.opt = COS;
+                diffSin(node);
                 break;
             case COS:
                 diffCos(node);
@@ -484,11 +499,12 @@ void nodeDiff(DiffNode_t* node) {
         }
     }
 
-    printLineToTex(texFile, "$$");
+    printLineToTex(texFile, "$$(");
     diffToTex(startNode, texFile);
-    printLineToTex(texFile, " = ");
+    printLineToTex(texFile, ")' = ");
     diffToTex(node, texFile);
     printLineToTex(texFile, "$$\\\\\\\\\n");
+    diffNodeDtor(startNode);
 }
 
 int equDiff(DiffNode_t* start) {
@@ -551,11 +567,19 @@ void powTex(DiffNode_t* node, FILE* file) {
 void divTex(DiffNode_t* node, FILE* file) {
     if (!node || !file) return;
 
-    fprintf(file, "\\frac{");
+    fprintf(file, "frac{");
     nodeToTex(node->left, file);
     fprintf(file, "}{");
     nodeToTex(node->right, file);
     fprintf(file, "}");
+}
+
+void triglogTex(DiffNode_t* node, FILE* file, const char* prep) {
+    if (!node || !file) return;
+
+    fprintf(file, "%s(", prep);
+    nodeToTex(node->right, file);
+    fprintf(file, ")");
 }
 
 void nodeToTex(DiffNode_t* node, FILE *file) {
@@ -581,8 +605,14 @@ void nodeToTex(DiffNode_t* node, FILE *file) {
                         powTex(node, file);
                         break;
                     case COS:
+                        triglogTex(node, file, "cos");
+                        break;
                     case SIN:
+                        triglogTex(node, file, "sin");
+                        break;
                     case LN:
+                        triglogTex(node, file, "ln");
+                        break;
                     case OPT_DEFAULT:
                     default:
                         break;
@@ -590,7 +620,7 @@ void nodeToTex(DiffNode_t* node, FILE *file) {
             };
             break;
         case NUM:
-            fprintf(file, "%lf", node->value.num);
+            fprintf(file, "%.2lf", node->value.num);
             break;
         case VAR:
             fprintf(file, "%s",  node->value.var);
@@ -622,7 +652,7 @@ void initTex(FILE* file) {
 void printLineToTex(FILE*file, const char* string) {
     if (!file) return;
 
-    fprintf(texFile, string);
+    fprintf(texFile, "%s", string);
 }
 
 // VISUAL DUMP
@@ -666,7 +696,7 @@ void printNodeVal(DiffNode_t* node, FILE* file) {
             };
             break;
         case NUM:
-            fprintf(file, "%lf", node->value.num);
+            fprintf(file, "%.2lf", node->value.num);
             break;
         case VAR:
             fprintf(file, "%s",  node->value.var);
@@ -727,7 +757,7 @@ void graphDump(DiffNode_t *node) {
 
 void closeLogfile(void) {
     if (texFile) {
+        fprintf(texFile, "\n\\end{document}");
         fclose(texFile);
-        fprintf(texFile, "$\n\\end{document}");
     }
 }
