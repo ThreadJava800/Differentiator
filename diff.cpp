@@ -1,5 +1,8 @@
 #include "diff.h"
 
+FILE* texFile = nullptr;
+int   onClose = atexit(closeLogfile);
+
 DiffNode_t* diffNodeCtor(DiffNode_t* left, DiffNode_t* right, DiffNode_t* prev, int* err) {
     DiffNode_t* diffNode = (DiffNode_t*) calloc(1, sizeof(DiffNode_t));
     if (!diffNode) {
@@ -115,8 +118,8 @@ void parseNode(DiffNode_t** node, FILE* readFile) {
     }
 }
 
-int parseEquation(FILE *readFile) {
-    DIFF_CHECK(!readFile, DIFF_FILE_NULL);
+DiffNode_t* parseEquation(FILE *readFile) {
+    if (!readFile) return nullptr;
 
     DiffNode_t* startNode = diffNodeCtor(nullptr, nullptr, nullptr);
     parseNode(&startNode, readFile);
@@ -125,13 +128,16 @@ int parseEquation(FILE *readFile) {
     equDiff(startNode);
     addPrevs(startNode);
 
-    easierEqu(startNode);
-    graphDump(startNode);
-    //diffToTex(startNode, "new.tex");
+    // graphDump(startNode);
+
+    // easierEqu(startNode);
+    // graphDump(startNode);
+    // diffToTex(startNode, "new.tex");
+    // nodeToTex(startNode, texFile);
 
     diffNodeDtor(startNode);
 
-    return DIFF_OK;
+    return startNode;
 }
 
 DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy) {
@@ -240,7 +246,9 @@ void makeNodeEasy(DiffNode_t* node) {
 void easierEqu(DiffNode_t* start) {
     if (!start) return;
 
+    diffToTex(start, texFile);
     makeNodeEasy(start);
+    diffToTex(start, texFile);
     if (start->left)  easierEqu(start->left);
     if (start->right) easierEqu(start->right);
 }
@@ -436,6 +444,8 @@ void diffLn(DiffNode_t* node) {
 void nodeDiff(DiffNode_t* node) {
     if (!node) return;
 
+    DiffNode_t* startNode = nodeCopy(node);
+
     if (node->type == NUM) {
         node->value.num = 0;
         return;
@@ -473,6 +483,12 @@ void nodeDiff(DiffNode_t* node) {
                 break;
         }
     }
+
+    printLineToTex(texFile, "$$");
+    diffToTex(startNode, texFile);
+    printLineToTex(texFile, " = ");
+    diffToTex(node, texFile);
+    printLineToTex(texFile, "$$\\\\\\\\\n");
 }
 
 int equDiff(DiffNode_t* start) {
@@ -483,16 +499,18 @@ int equDiff(DiffNode_t* start) {
     return DIFF_OK;
 }
 
-int openDiffFile(const char *fileName) {
-    DIFF_CHECK(!fileName, DIFF_FILE_NULL);
+DiffNode_t* openDiffFile(const char *fileName, const char *texName) {
+    if (!fileName) return nullptr;
 
     FILE* readFile = fopen(fileName, "rb");
-    DIFF_CHECK(!readFile, DIFF_FILE_NULL);
+    texFile  = fopen(texName, "w");
+    initTex(texFile);
+    if (!readFile || !texFile) return nullptr;
 
-    int err = parseEquation(readFile);
+    DiffNode_t* root = parseEquation(readFile);
     fclose(readFile);
 
-    return err;
+    return root;
 }
 
 void diffNodeDtor(DiffNode_t* node) {
@@ -584,22 +602,27 @@ void nodeToTex(DiffNode_t* node, FILE *file) {
     }
 }
 
-int diffToTex(DiffNode_t* startNode, const char* fileName) {
+int diffToTex(DiffNode_t* startNode, FILE* file) {
     DIFF_CHECK(!startNode, DIFF_NULL);
-    DIFF_CHECK(!fileName, DIFF_FILE_NULL);
+    DIFF_CHECK(!file, DIFF_FILE_NULL);
 
-    FILE *tex = fopen(fileName, "w");
-    DIFF_CHECK(!tex, DIFF_FILE_NULL);
-
-    fprintf(tex, "\\documentclass{article}\n");
-    fprintf(tex, "\\usepackage{amssymb, amsmath, multicol}\n");
-    fprintf(tex, "\\begin{document}\n$");
-
-    nodeToTex(startNode, tex);
-
-    fprintf(tex, "$\n\\end{document}");
+    nodeToTex(startNode, file);
 
     return DIFF_OK;
+}
+
+void initTex(FILE* file) {
+    if (!file) return;
+
+    fprintf(texFile, "\\documentclass{article}\n");
+    fprintf(texFile, "\\usepackage{amssymb, amsmath, multicol}\n");
+    fprintf(texFile, "\\begin{document}\n");
+}
+
+void printLineToTex(FILE*file, const char* string) {
+    if (!file) return;
+
+    fprintf(texFile, string);
 }
 
 // VISUAL DUMP
@@ -700,4 +723,11 @@ void graphDump(DiffNode_t *node) {
     fclose(tempFile);
 
     system("dot -Tsvg temp.dot > graph.png && xdg-open graph.png");
+}
+
+void closeLogfile(void) {
+    if (texFile) {
+        fclose(texFile);
+        fprintf(texFile, "$\n\\end{document}");
+    }
 }

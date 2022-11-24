@@ -89,7 +89,7 @@ void addPrevs(DiffNode_t* start);
 
 void parseNode(DiffNode_t** node, FILE* readFile);
 
-int parseEquation(FILE* readFile);
+DiffNode_t* parseEquation(FILE* readFile);
 
 DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy);
 
@@ -127,11 +127,11 @@ void nodeDiff(DiffNode_t* node);
 
 int equDiff(DiffNode_t* start);
 
-// TEX OUTPUT
-
-int openDiffFile(const char *fileName);
+DiffNode_t* openDiffFile(const char *fileName, const char *texName = "zorich.tex");
 
 void diffNodeDtor(DiffNode_t* node);
+
+// TEX OUTPUT
 
 void anyTex(DiffNode_t* node, const char* oper, FILE* file);
 
@@ -141,7 +141,11 @@ void divTex(DiffNode_t* node, FILE* file);
 
 void nodeToTex(DiffNode_t* node, FILE *file);
 
-int diffToTex(DiffNode_t* startNode, const char* fileName);
+int diffToTex(DiffNode_t* startNode, FILE* file);
+
+void initTex(FILE* file);
+
+void printLineToTex(FILE*file, const char* string);
 
 //
 
@@ -150,5 +154,7 @@ void printNodeVal(DiffNode_t* node, FILE* file);
 void graphNode(DiffNode_t *node, FILE *tempFile);
 
 void graphDump(DiffNode_t *node);
+
+void closeLogfile(void);
 
 #endif
