@@ -14,7 +14,7 @@ const double EPSILON = 1e-12;
 
 const int MAX_REPLACE_COUNT = 26;
 
-const int NEED_TEX_REPLACEMENT = 3;
+const int NEED_TEX_REPLACEMENT = 1;
 
 const char phrases[][MAX_WORD_LENGTH] = {
     "Совершенно очевидно, что\\n\\n\n",
@@ -68,6 +68,8 @@ struct DiffNode_t {
     DiffNode_t *left  = nullptr;
     DiffNode_t *right = nullptr;
     DiffNode_t *prev  = nullptr;
+
+    char texSymb = '\0';
 };
 
 #define LEFT(node)  node->left
@@ -103,6 +105,8 @@ size_t max(size_t first, size_t second);
 size_t getTreeDepth(DiffNode_t* node);
 
 bool isNodeInList(const DiffNode_t* node, DiffNode_t** replaced, const int* replacedIndex);
+
+bool compareSubtrees(DiffNode_t* node1, DiffNode_t* node2);
 
 // READ TREE FROM FILE
 
@@ -158,17 +162,17 @@ void diffNodeDtor(DiffNode_t* node);
 
 // TEX OUTPUT
 
-void anyTex(DiffNode_t* node, const char* oper, FILE* file, DiffNode_t** replaced, int replacedSize);
+void anyTex(DiffNode_t* node, const char* oper, FILE* file);
 
-void powTex(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize);
+void powTex(DiffNode_t* node, FILE* file);
 
-void divTex(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize);
+void divTex(DiffNode_t* node, FILE* file);
 
-void triglogTex(DiffNode_t* node, FILE* file, const char* prep, DiffNode_t** replaced, int replacedSize);
+void triglogTex(DiffNode_t* node, FILE* file, const char* prep);
 
-void nodeToTex(DiffNode_t* node, FILE *file, DiffNode_t** replaced = nullptr, int replacedSize = 0);
+void nodeToTex(DiffNode_t* node, FILE *file);
 
-void printNodeReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize);
+void printNodeReplaced(DiffNode_t* node, FILE* file);
 
 void printTexReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize);
 
