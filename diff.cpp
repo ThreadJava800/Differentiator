@@ -499,6 +499,7 @@ void nodeDiff(DiffNode_t* node) {
         }
     }
 
+    printRandomPhrase(texFile);
     printLineToTex(texFile, "$$(");
     diffToTex(startNode, texFile);
     printLineToTex(texFile, ")' = ");
@@ -522,6 +523,8 @@ DiffNode_t* openDiffFile(const char *fileName, const char *texName) {
     texFile  = fopen(texName, "w");
     initTex(texFile);
     if (!readFile || !texFile) return nullptr;
+
+    srand(time(NULL));
 
     DiffNode_t* root = parseEquation(readFile);
     fclose(readFile);
@@ -567,7 +570,7 @@ void powTex(DiffNode_t* node, FILE* file) {
 void divTex(DiffNode_t* node, FILE* file) {
     if (!node || !file) return;
 
-    fprintf(file, "frac{");
+    fprintf(file, "\\frac{");
     nodeToTex(node->left, file);
     fprintf(file, "}{");
     nodeToTex(node->right, file);
@@ -646,6 +649,9 @@ void initTex(FILE* file) {
 
     fprintf(texFile, "\\documentclass{article}\n");
     fprintf(texFile, "\\usepackage{amssymb, amsmath, multicol}\n");
+    fprintf(texFile, "\\usepackage[utf8]{inputenc}\n");
+    fprintf(texFile, "\\usepackage[T1,T2A]{fontenc}\n");
+    fprintf(texFile, "\\usepackage[russian]{babel}\n");
     fprintf(texFile, "\\begin{document}\n");
 }
 
@@ -653,6 +659,14 @@ void printLineToTex(FILE*file, const char* string) {
     if (!file) return;
 
     fprintf(texFile, "%s", string);
+}
+
+void printRandomPhrase(FILE* file) {
+    if (!file) return;
+
+    int phLen = sizeof(phrases) / sizeof(phrases[0]);
+
+    fprintf(texFile, "%s", phrases[rand() % phLen]);
 }
 
 // VISUAL DUMP

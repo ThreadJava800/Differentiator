@@ -6,10 +6,23 @@
 #include <malloc.h>
 #include <ctype.h>
 #include <string.h>
+#include <time.h>
 
-const int MAX_WORD_LENGTH = 256;
+const int MAX_WORD_LENGTH = 4096;
 
 const double EPSILON = 1e-12;
+
+const char phrases[][MAX_WORD_LENGTH] = {
+    "Совершенно очевидно, что\\n\\n\n",
+    "Заметим, что\\n\\n\n",
+    "Вас это не шокирует?\\n\\n\n",
+    "Очередное халявное преобразование:\\n\\n\n",
+    "Это преобразование позаимствуем из вступительных испытаний в советские ясли:\\n\\n\n",
+    "Иииииииииииииии если:\\n\\n\n",
+    "По теореме Фрэнсиса Галлагера - Фионы Галлагер - Джейма Лишмана - Стива Уилтона - Джека Филлипа - Ронана Галлагера - И́эна Клейтона - Галлагера Михайло Милковича - Аманды Милкович - Уильяма Галлагера - Дебора Галлагера - Карла Фрэнсиса - Галлагера Вероники - Фишера Кевина - Болла Шейла - Джексон Карена - Слота:\\n\\n\n",
+    "Ничего не понял, но очень интересно:\\n\\n\n",
+    "Любому советскому первокласснику очевидно, что\\n\\n\n",
+};
 
 enum DiffError_t {
     DIFF_OK         = 2 << 0,
@@ -149,7 +162,9 @@ int diffToTex(DiffNode_t* startNode, FILE* file);
 
 void initTex(FILE* file);
 
-void printLineToTex(FILE*file, const char* string);
+void printLineToTex(FILE* file, const char* string);
+
+void printRandomPhrase(FILE* file);
 
 //
 

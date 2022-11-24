@@ -1,9 +1,16 @@
 \documentclass{article}
 \usepackage{amssymb, amsmath, multicol}
+\usepackage[utf8]{inputenc}
+\usepackage[T1,T2A]{fontenc}
+\usepackage[russian]{babel}
 \begin{document}
-$$({x}^{2.00})' = 1.00 \cdot (2.00 \cdot ({x}^{2.00 - 1.00}))$$\\\\
-$$(sin({x}^{2.00}))' = (cos({x}^{2.00})) \cdot (1.00 \cdot (2.00 \cdot ({x}^{2.00 - 1.00})))$$\\\\
+Иииииииииииииии если:\n\n
+$$(sin(x))' = (cos(x)) \cdot 1.00$$\\\\
+Совершенно очевидно, что\n\n
+$$(cos(x))' = (-1.00 \cdot 1.00) \cdot (sin(x))$$\\\\
+Очередное халявное преобразование:\n\n
+$$(\frac{sin(x)}{cos(x)})' = \frac{(((cos(x)) \cdot 1.00) \cdot (cos(x))) - ((sin(x)) \cdot ((-1.00 \cdot 1.00) \cdot (sin(x))))}{{cos(x)}^{2.00}}$$\\\\
 После очевидных упрощений имеем:
-$$(cos({x}^{2.00})) \cdot (2.00 \cdot x)$$\\\\
+$$\frac{((cos(x)) \cdot (cos(x))) - ((sin(x)) \cdot (-1.00 \cdot (sin(x))))}{{cos(x)}^{2.00}}$$\\\\
 
 \end{document}
