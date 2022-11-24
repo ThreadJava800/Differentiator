@@ -21,6 +21,31 @@ bool compDouble(const double value1, const double value2) {
     return fabs(value1 - value2) < EPSILON;
 }
 
+size_t max(size_t first, size_t second) {
+    if (first >= second) return first;
+    return second;
+}
+
+size_t getTreeDepth(DiffNode_t* node) {
+    if (!node) return 0;
+    
+    size_t leftNode  = getTreeDepth(node->left);
+    size_t rightNode = getTreeDepth(node->right);
+
+    return max(leftNode, rightNode) + 1;
+}
+
+bool isNodeInList(const DiffNode_t* node, DiffNode_t** replaced, const int* replacedIndex) {
+    if (!node || !replaced || !replacedIndex) return false;
+
+    for (int i = 0; i < *replacedIndex; i++) {
+        if (node == replaced[i]) return true;
+    }
+
+
+    return false;
+}
+
 // PARSER
 
 int addNodeVal(DiffNode_t* node, char* value) {
@@ -125,22 +150,17 @@ DiffNode_t* parseEquation(FILE *readFile) {
     parseNode(&startNode, readFile);
     addPrevs(startNode);
 
-    // graphDump(startNode);
-
     equDiff(startNode);
     addPrevs(startNode);
 
-    graphDump(startNode);
-
-    printLineToTex(texFile, "После очевидных упрощений имеем:\n");
-
-    easierEqu(startNode);
+    // printLineToTex(texFile, "После очевидных упрощений имеем:\n");
+    // easierEqu(startNode);
 
     printLineToTex(texFile, "$$");
     diffToTex(startNode, texFile);
     printLineToTex(texFile, "$$\\\\\\\\\n");
 
-    diffNodeDtor(startNode);
+    //diffNodeDtor(startNode);
 
     return startNode;
 }
@@ -543,49 +563,49 @@ void diffNodeDtor(DiffNode_t* node) {
 
 // TEX
 
-void anyTex(DiffNode_t* node, const char* oper, FILE* file) {
+void anyTex(DiffNode_t* node, const char* oper, FILE* file, DiffNode_t** replaced, int replacedSize) {
     if (!node || !oper || !file) return;
 
     if (!(IS_NUM(LEFT(node)) || IS_VAR(LEFT(node)))) fprintf(file, "(");
-    nodeToTex(node->left, file);
+    printNodeReplaced(node->left, file, replaced, replacedSize);
     if (!(IS_NUM(LEFT(node)) || IS_VAR(LEFT(node)))) fprintf(file, ")");
 
     fprintf(file, "%s", oper);
 
     if (!(IS_NUM(RIGHT(node)) || IS_VAR(RIGHT(node)))) fprintf(file, "(");
-    nodeToTex(node->right, file);
+    printNodeReplaced(node->right, file, replaced, replacedSize);
     if (!(IS_NUM(RIGHT(node)) || IS_VAR(RIGHT(node)))) fprintf(file, ")");
 }
 
-void powTex(DiffNode_t* node, FILE* file) {
+void powTex(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize) {
     if (!node || !file) return;
 
     fprintf(file, "{");
-    nodeToTex(node->left, file);
+    printNodeReplaced(node->left, file, replaced, replacedSize);
     fprintf(file, "}^{");
-    nodeToTex(node->right, file);
+    printNodeReplaced(node->right, file, replaced, replacedSize);
     fprintf(file, "}");
 }
 
-void divTex(DiffNode_t* node, FILE* file) {
+void divTex(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize) {
     if (!node || !file) return;
 
     fprintf(file, "\\frac{");
-    nodeToTex(node->left, file);
+    printNodeReplaced(node->left, file, replaced, replacedSize);
     fprintf(file, "}{");
-    nodeToTex(node->right, file);
+    printNodeReplaced(node->right, file, replaced, replacedSize);
     fprintf(file, "}");
 }
 
-void triglogTex(DiffNode_t* node, FILE* file, const char* prep) {
+void triglogTex(DiffNode_t* node, FILE* file, const char* prep, DiffNode_t** replaced, int replacedSize) {
     if (!node || !file) return;
 
     fprintf(file, "%s(", prep);
-    nodeToTex(node->right, file);
+    printNodeReplaced(node->right, file, replaced, replacedSize);
     fprintf(file, ")");
 }
 
-void nodeToTex(DiffNode_t* node, FILE *file) {
+void nodeToTex(DiffNode_t* node, FILE *file, DiffNode_t** replaced, int replacedSize) {
     if (!node || !file) return;
 
     switch (node->type) {
@@ -593,28 +613,28 @@ void nodeToTex(DiffNode_t* node, FILE *file) {
             {
                 switch (node->value.opt) {
                     case MUL:
-                        anyTex(node, " \\cdot ", file);
+                        anyTex(node, " \\cdot ", file, replaced, replacedSize);
                         break;
                     case DIV:
-                        divTex(node, file);
+                        divTex(node, file, replaced, replacedSize);
                         break;
                     case SUB:
-                        anyTex(node, " - ", file);
+                        anyTex(node, " - ", file, replaced, replacedSize);
                         break;
                     case ADD:
-                        anyTex(node, " + ", file);
+                        anyTex(node, " + ", file, replaced, replacedSize);
                         break;
                     case POW:
-                        powTex(node, file);
+                        powTex(node, file, replaced, replacedSize);
                         break;
                     case COS:
-                        triglogTex(node, file, "cos");
+                        triglogTex(node, file, "cos", replaced, replacedSize);
                         break;
                     case SIN:
-                        triglogTex(node, file, "sin");
+                        triglogTex(node, file, "sin", replaced, replacedSize);
                         break;
                     case LN:
-                        triglogTex(node, file, "ln");
+                        triglogTex(node, file, "ln", replaced, replacedSize);
                         break;
                     case OPT_DEFAULT:
                     default:
@@ -635,11 +655,68 @@ void nodeToTex(DiffNode_t* node, FILE *file) {
     }
 }
 
+void printNodeReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize) {
+    if (!node || !file) return;
+
+    if (replaced) {
+        for (int i = 0; i < replacedSize; i++) {
+            if (node == replaced[i]) {
+                fprintf(file, "%c", 65 + i);
+                return;
+            }
+        }
+    }
+    nodeToTex(node, file, replaced, replacedSize);
+}
+
+void printTexReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize) {
+    if (!node || !file || !replaced) return;
+
+    if (replacedSize != 0) {
+        fprintf(file, "Введём следующие обозначения:\\n\n");
+    }
+    for (int i = 0; i < replacedSize; i++) {
+        fprintf(file, "%c = ", 65 + i);
+        nodeToTex(replaced[i], file);
+        fprintf(file, "\n");
+    }
+
+    printNodeReplaced(node, file, replaced, replacedSize);
+}
+
+void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex) {
+    if (!node || !replaced || !replacedIndex) return;
+    if (getTreeDepth(node) < NEED_TEX_REPLACEMENT) return;
+
+    if (getTreeDepth(node) == NEED_TEX_REPLACEMENT && !isNodeInList(node, replaced, replacedIndex)) {
+        replaced[*replacedIndex] = node;
+        (*replacedIndex)++;
+        return;
+    }
+
+    replaceNode(node->right, replaced, replacedIndex);
+    replaceNode(node->left, replaced, replacedIndex);
+}
+
+void makeReplacements(DiffNode_t* start, FILE* file) {
+    if (!start || !file) return;
+
+    DiffNode_t** replacedNodes = (DiffNode_t**) calloc(MAX_REPLACE_COUNT, sizeof(DiffNode_t*));
+    int replacedIndex = 0;
+    replaceNode(start, replacedNodes, &replacedIndex);
+
+    // for (int i = 0; i < replacedIndex; i++) {
+    //     printf("%p %c\n", replacedNodes[i], 65 + i);
+    // }
+
+    printTexReplaced(start, file, replacedNodes, replacedIndex);
+}
+
 int diffToTex(DiffNode_t* startNode, FILE* file) {
     DIFF_CHECK(!startNode, DIFF_NULL);
     DIFF_CHECK(!file, DIFF_FILE_NULL);
 
-    nodeToTex(startNode, file);
+    makeReplacements(startNode, texFile);
 
     return DIFF_OK;
 }

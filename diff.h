@@ -12,6 +12,10 @@ const int MAX_WORD_LENGTH = 4096;
 
 const double EPSILON = 1e-12;
 
+const int MAX_REPLACE_COUNT = 26;
+
+const int NEED_TEX_REPLACEMENT = 4;
+
 const char phrases[][MAX_WORD_LENGTH] = {
     "Совершенно очевидно, что\\n\\n\n",
     "Заметим, что\\n\\n\n",
@@ -94,6 +98,12 @@ DiffNode_t* diffNodeCtor(DiffNode_t* left, DiffNode_t* right, DiffNode_t* prev, 
 
 bool compDouble(const double value1, const double value2);
 
+size_t max(size_t first, size_t second);
+
+size_t getTreeDepth(DiffNode_t* node);
+
+bool isNodeInList(const DiffNode_t* node, DiffNode_t** replaced, const int* replacedIndex);
+
 // READ TREE FROM FILE
 
 int addNodeVal(DiffNode_t* node, char* value);
@@ -148,15 +158,23 @@ void diffNodeDtor(DiffNode_t* node);
 
 // TEX OUTPUT
 
-void anyTex(DiffNode_t* node, const char* oper, FILE* file);
+void anyTex(DiffNode_t* node, const char* oper, FILE* file, DiffNode_t** replaced, int replacedSize);
 
-void powTex(DiffNode_t* node, FILE* file);
+void powTex(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize);
 
-void divTex(DiffNode_t* node, FILE* file);
+void divTex(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize);
 
-void triglogTex(DiffNode_t* node, FILE* file, const char* prep);
+void triglogTex(DiffNode_t* node, FILE* file, const char* prep, DiffNode_t** replaced, int replacedSize);
 
-void nodeToTex(DiffNode_t* node, FILE *file);
+void nodeToTex(DiffNode_t* node, FILE *file, DiffNode_t** replaced = nullptr, int replacedSize = 0);
+
+void printNodeReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize);
+
+void printTexReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize);
+
+void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex);
+
+void makeReplacements(DiffNode_t* start, FILE* file);
 
 int diffToTex(DiffNode_t* startNode, FILE* file);
 
