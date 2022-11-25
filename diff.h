@@ -14,17 +14,17 @@ const double EPSILON = 1e-12;
 
 const int MAX_REPLACE_COUNT = 26;
 
-const int NEED_TEX_REPLACEMENT = 6;
+const int NEED_TEX_REPLACEMENT = 4;
 
 const char phrases[][MAX_WORD_LENGTH] = {
-    "Совершенно очевидно, что\n\n",
-    "Заметим, что\n\n",
-    "Вас это не шокирует?\n\n",
-    "Очередное халявное преобразование:\n\n",
-    "Это преобразование позаимствуем из вступительных испытаний в советские ясли:\n\n",
-    "Иииииииииииииии если:\n\n",
-    "Ничего не понял, но очень интересно:\n\n",
-    "Любому советскому первокласснику очевидно, что\n\n",
+    "\n\nСовершенно очевидно, что\n\n",
+    "\n\nЗаметим, что\n\n",
+    "\n\nВас это не шокирует?\n\n",
+    "\n\nОчередное халявное преобразование:\n\n",
+    "\n\nЭто преобразование позаимствуем из вступительных испытаний в советские ясли:\n\n",
+    "\n\nИииииииииииииии если:\n\n",
+    "\n\nНичего не понял, но очень интересно:\n\n",
+    "\n\nЛюбому советскому первокласснику очевидно, что\n\n",
 };
 
 enum DiffError_t {
@@ -207,6 +207,8 @@ void printTrigPlot(DiffNode_t* node, FILE* file, const char* prep);
 void drawNode(DiffNode_t* node, FILE* file);
 
 void drawGraph(DiffNode_t* node);
+
+void equTangent(DiffNode_t* node, double x0);
 
 //
 

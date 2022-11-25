@@ -585,6 +585,10 @@ int equDiff(DiffNode_t* start) {
     nodeDiff(start, texFile);
     addPrevs(start);
 
+    fprintf(texFile, "После очевидных упрощений имеем:\n\n");
+    easierEqu(start);
+    diffToTex(start);
+
     return DIFF_OK;
 }
 
@@ -596,9 +600,11 @@ DiffNode_t* openDiffFile(const char *fileName, const char *texName) {
     initTex(texFile);
     if (!readFile || !texFile) return nullptr;
 
-    srand(time(NULL));
+    srand((unsigned int) time(NULL));
 
     DiffNode_t* root = parseEquation(readFile);
+    fprintf(texFile, "Дано: ");
+    diffToTex(root);
     fclose(readFile);
 
     return root;
@@ -741,14 +747,13 @@ void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex) {
     if (getTreeDepth(node) == NEED_TEX_REPLACEMENT) {
         for (int i = 0; i < *replacedIndex; i++) {
             if (compareSubtrees(node, replaced[i])) {
-                printf("true");
-                node->texSymb = 65 + i;
+                node->texSymb = (char) (65 + i);
                 return;
             }
         }
 
         replaced[*replacedIndex] = node;
-        node->texSymb = 65 + *replacedIndex;
+        node->texSymb = (char) (65 + *replacedIndex);
         (*replacedIndex)++;
         return;
     }
@@ -860,6 +865,8 @@ void tailor(DiffNode_t* node, int pow, double x0) {
         fprintf(texFile, "\\frac{%.2lf}{%lu} * {(x-%.2lf)}^{%d} + ", funcValue(tailorCopy, x0), factorial(i), x0, i);
     }
     fprintf(texFile, "o({x}^{%d}) $\n\n", pow);
+
+    diffNodeDtor(tailorCopy);
 }
 
 void printPlotOper(DiffNode_t* node, const char* oper, FILE* file) {
@@ -935,10 +942,26 @@ void drawGraph(DiffNode_t* node) {
     fprintf(file, "\nset terminal png size 960,720\nset output 'graph.png'\nplot f(x)\nexit\n");
     pclose(file);
 
+    fprintf(texFile, "\n\nГрафик функции ");
+    diffToTex(node);
+    fprintf(texFile, ":\n\n");
     fprintf(texFile, "\\begin{figure}[h]"
                         "\\center{\\includegraphics[width=100mm]{graph.png}}"
                         "\\label{fig:t}"
                      "\\end{figure}");
+}
+
+void equTangent(DiffNode_t* node, double x0) {
+    if (!node) return;
+
+    DiffNode_t* tangent = nodeCopy(node);
+    nodeDiff(tangent, nullptr);
+    double k = funcValue(tangent, x0);
+    double b = funcValue(node, x0) - k * x0;
+    fprintf(texFile, "Уравнение касательной в точке x=%.2lf имеет вид:\n\n", x0);
+    fprintf(texFile, "y = %.2lfx + %.2lf:\n\n", k, b);
+
+    diffNodeDtor(tangent);
 }
 
 // VISUAL DUMP
@@ -1047,6 +1070,6 @@ void closeLogfile(void) {
         fprintf(texFile, "\n\\end{document}");
         fclose(texFile);
 
-        system("pdflatex zorich.tex && xdg-open zorich.pdf");
+        system("pdflatex zorich.tex > /dev/null && xdg-open zorich.pdf");
     }
 }
