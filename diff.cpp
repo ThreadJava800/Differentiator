@@ -570,10 +570,11 @@ void nodeDiff(DiffNode_t* node, FILE* file) {
     }
     if (file) {
         printRandomPhrase(file);
-        printLineToTex(file, "\\\\$(");
+        printLineToTex(file, "$(");
         nodeToTex(startNode, file);
         printLineToTex(file, ")'$ = ");
         diffToTex(node);
+        printLineToTex(file, "\n\n");
         diffNodeDtor(startNode);
     }
 }
@@ -721,15 +722,15 @@ void printTexReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int r
 
     fprintf(file, "$");
     printNodeReplaced(node, file);
-    fprintf(file, "$\\\\");
+    fprintf(file, "$");
 
     if (replacedSize != 0) {
-        fprintf(file, "\\\\ где:\\\\\n");
+        fprintf(file, "\n\nгде:\n\n");
     }
     for (int i = 0; i < replacedSize; i++) {
         fprintf(file, "%c = $", 65 + i);
         nodeToTex(replaced[i], file);
-        fprintf(file, "$\\\\\n");
+        fprintf(file, "$\n\n");
     }
 }
 
@@ -777,8 +778,11 @@ int diffToTex(DiffNode_t* startNode) {
 void initTex(FILE* file) {
     if (!file) return;
 
-    fprintf(texFile, "\\documentclass{article}\n");
+    fprintf(texFile, "\\documentclass{article}\n\n");
     fprintf(texFile, "\\usepackage{amssymb, amsmath, multicol}\n");
+    fprintf(texFile, "\\usepackage{graphicx}\n");
+    fprintf(texFile, "\\usepackage{float}\n");
+    fprintf(texFile, "\\usepackage{wrapfig}\n");
     fprintf(texFile, "\\usepackage[utf8]{inputenc}\n");
     fprintf(texFile, "\\usepackage[T1,T2A]{fontenc}\n");
     fprintf(texFile, "\\usepackage[russian]{babel}\n");
@@ -850,12 +854,12 @@ void tailor(DiffNode_t* node, int pow, double x0) {
 
     DiffNode_t* tailorCopy = nodeCopy(node);
 
-    fprintf(texFile, "\nНу что? Тейлора тебе дать?\\\\$ %lf + ", funcValue(tailorCopy, x0));
+    fprintf(texFile, "\n\nНу что? Тейлора тебе дать?\n\n$%lf + ", funcValue(tailorCopy, x0));
     for (int i = 1; i < pow; i++) {
         nodeDiff(tailorCopy, nullptr);
         fprintf(texFile, "\\frac{%.2lf}{%lu} * {(x-%.2lf)}^{%d} + ", funcValue(tailorCopy, x0), factorial(i), x0, i);
     }
-    fprintf(texFile, "o({x}^{%d}) $\\\\\n", pow);
+    fprintf(texFile, "o({x}^{%d}) $\n\n", pow);
 }
 
 void printPlotOper(DiffNode_t* node, const char* oper, FILE* file) {
@@ -928,20 +932,13 @@ void drawGraph(DiffNode_t* node) {
 
     fprintf(file, "f(x)=");
     drawNode(node, file);
-    fprintf(file, "\nplot f(x)\nexit\n");
-    // perror("Error: ");
+    fprintf(file, "\nset terminal png size 960,720\nset output 'graph.png'\nplot f(x)\nexit\n");
     pclose(file);
 
-    // FILE* file = fopen("plot.dat", "w");
-    // if (!file) return;
-
-    // for (double i = -10; i < 10; i += 0.001) {
-    //     fprintf(file, "%lf %lf\n", i, funcValue(node, i));
-    // }
-
-    // fclose(file);
-
-    // system("gnuplot -e \"f(x)=sin(x)/cos(x); set terminal png size 960,720; set output 'graph.png'; plot f(x)\"");
+    fprintf(texFile, "\\begin{figure}[h]"
+                        "\\center{\\includegraphics[width=100mm]{graph.png}}"
+                        "\\label{fig:t}"
+                     "\\end{figure}");
 }
 
 // VISUAL DUMP
@@ -1049,5 +1046,7 @@ void closeLogfile(void) {
     if (texFile) {
         fprintf(texFile, "\n\\end{document}");
         fclose(texFile);
+
+        system("pdflatex zorich.tex && xdg-open zorich.pdf");
     }
 }
