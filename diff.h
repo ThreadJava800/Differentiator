@@ -14,7 +14,7 @@ const double EPSILON = 1e-12;
 
 const int MAX_REPLACE_COUNT = 26;
 
-const int NEED_TEX_REPLACEMENT = 4;
+const int NEED_TEX_REPLACEMENT = 20;
 
 const char phrases[][MAX_WORD_LENGTH] = {
     "\n\nСовершенно очевидно, что\n\n",
@@ -119,6 +119,8 @@ int addNodeVal(DiffNode_t* node, char* value);
 void addPrevs(DiffNode_t* start);
 
 void parseNode(DiffNode_t** node, FILE* readFile);
+
+void removeImNodes(DiffNode_t* node);
 
 DiffNode_t* parseEquation(FILE* readFile);
 

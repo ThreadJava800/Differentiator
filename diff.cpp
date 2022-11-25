@@ -178,12 +178,23 @@ void parseNode(DiffNode_t** node, FILE* readFile) {
     }
 }
 
+void removeImNodes(DiffNode_t* node) {
+    if (!node) return;
+
+    if (IS_VAR(node) && strcasecmp(node->value.var, "") == 0) {
+        hangNode(node, node->left);
+    } 
+    removeImNodes(node->right);
+    removeImNodes(node->left);
+}
+
 DiffNode_t* parseEquation(FILE *readFile) {
     if (!readFile) return nullptr;
 
     DiffNode_t* startNode = diffNodeCtor(nullptr, nullptr, nullptr);
     parseNode(&startNode, readFile);
     addPrevs(startNode);
+    removeImNodes(startNode);
 
     return startNode;
 }
@@ -887,7 +898,7 @@ void printTrigPlot(DiffNode_t* node, FILE* file, const char* prep) {
     if (!node || !file || !prep) return;
 
     fprintf(file, "%s(", prep);
-    printNodeReplaced(node->right, file);
+    drawNode(node->right, file);
     fprintf(file, ")");
 }
 
@@ -922,7 +933,7 @@ void drawNode(DiffNode_t* node, FILE* file) {
                 printTrigPlot(node, file, "sin");
                 break;
             case LN:
-                printTrigPlot(node, file, "ln");
+                printTrigPlot(node, file, "log");
                 break;
             case OPT_DEFAULT:
             default:
