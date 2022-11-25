@@ -72,6 +72,15 @@ bool compareSubtrees(DiffNode_t* node1, DiffNode_t* node2) {
     return false;
 }
 
+size_t factorial(int pow) {
+    size_t res = 1;
+    for (int i = 2; i <= pow; i++) {
+        res *= i;
+    }
+
+    return res;
+}
+
 // PARSER
 
 int addNodeVal(DiffNode_t* node, char* value) {
@@ -841,12 +850,12 @@ void tailor(DiffNode_t* node, int pow, double x0) {
 
     DiffNode_t* tailorCopy = nodeCopy(node);
 
-    fprintf(texFile, "\n$$ %lf + ", funcValue(tailorCopy, x0));
+    fprintf(texFile, "\nНу что? Тейлора тебе дать?\\\\$ %lf + ", funcValue(tailorCopy, x0));
     for (int i = 1; i < pow; i++) {
         nodeDiff(tailorCopy, nullptr);
-        fprintf(texFile, "%lf * {(x-%lf)}^{%d} + ", funcValue(tailorCopy, x0), x0, i);
+        fprintf(texFile, "\\frac{%.2lf}{%lu} * {(x-%.2lf)}^{%d} + ", funcValue(tailorCopy, x0), factorial(i), x0, i);
     }
-    fprintf(texFile, "o({x}^{%d}) $$\\\\\n", pow);
+    fprintf(texFile, "o({x}^{%d}) $\\\\\n", pow);
 }
 
 // VISUAL DUMP

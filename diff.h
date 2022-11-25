@@ -111,6 +111,8 @@ bool isNodeInList(const DiffNode_t* node, DiffNode_t** replaced, const int* repl
 
 bool compareSubtrees(DiffNode_t* node1, DiffNode_t* node2);
 
+size_t factorial(int pow);
+
 // READ TREE FROM FILE
 
 int addNodeVal(DiffNode_t* node, char* value);
