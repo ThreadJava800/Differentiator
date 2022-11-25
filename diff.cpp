@@ -75,7 +75,7 @@ bool compareSubtrees(DiffNode_t* node1, DiffNode_t* node2) {
 size_t factorial(int pow) {
     size_t res = 1;
     for (int i = 2; i <= pow; i++) {
-        res *= i;
+        res *= (size_t) i;
     }
 
     return res;
@@ -856,6 +856,92 @@ void tailor(DiffNode_t* node, int pow, double x0) {
         fprintf(texFile, "\\frac{%.2lf}{%lu} * {(x-%.2lf)}^{%d} + ", funcValue(tailorCopy, x0), factorial(i), x0, i);
     }
     fprintf(texFile, "o({x}^{%d}) $\\\\\n", pow);
+}
+
+void printPlotOper(DiffNode_t* node, const char* oper, FILE* file) {
+    if (!node || !oper || !file) return;
+
+    if (!(IS_NUM(LEFT(node)) || IS_VAR(LEFT(node)))) fprintf(file, "(");
+    drawNode(node->left, file);
+    if (!(IS_NUM(LEFT(node)) || IS_VAR(LEFT(node)))) fprintf(file, ")");
+
+    fprintf(file, "%s", oper);
+
+    if (!(IS_NUM(RIGHT(node)) || IS_VAR(RIGHT(node)))) fprintf(file, "(");
+    drawNode(node->right, file);
+    if (!(IS_NUM(RIGHT(node)) || IS_VAR(RIGHT(node)))) fprintf(file, ")");
+} 
+
+void printTrigPlot(DiffNode_t* node, FILE* file, const char* prep) {
+    if (!node || !file || !prep) return;
+
+    fprintf(file, "%s(", prep);
+    printNodeReplaced(node->right, file);
+    fprintf(file, ")");
+}
+
+void drawNode(DiffNode_t* node, FILE* file) {
+    if (!node || !file) return;
+
+    if (node->type == NUM) {
+        fprintf(file, "%.2lf", node->value.num);
+    } else if (node->type == VAR) {
+        fprintf(file, "%s", node->value.var);
+    } else {
+        switch (node->value.opt) {
+            case MUL:
+                printPlotOper(node, " * ", file);
+                break;
+            case DIV:
+                printPlotOper(node, " / ", file);
+                break;
+            case SUB:
+                printPlotOper(node, " - ", file);
+                break;
+            case ADD:
+                printPlotOper(node, " + ", file);
+                break;
+            case POW:
+                printPlotOper(node, " ** ", file);
+                break;
+            case COS:
+                printTrigPlot(node, file, "cos");
+                break;
+            case SIN:
+                printTrigPlot(node, file, "sin");
+                break;
+            case LN:
+                printTrigPlot(node, file, "ln");
+                break;
+            case OPT_DEFAULT:
+            default:
+                break;
+        }
+    }
+}
+
+void drawGraph(DiffNode_t* node) {
+    if (!node) return;
+
+    FILE* file = popen("gnuplot -persistent", "w");
+    if (!file) return;
+
+    fprintf(file, "f(x)=");
+    drawNode(node, file);
+    fprintf(file, "\nplot f(x)\nexit\n");
+    // perror("Error: ");
+    pclose(file);
+
+    // FILE* file = fopen("plot.dat", "w");
+    // if (!file) return;
+
+    // for (double i = -10; i < 10; i += 0.001) {
+    //     fprintf(file, "%lf %lf\n", i, funcValue(node, i));
+    // }
+
+    // fclose(file);
+
+    // system("gnuplot -e \"f(x)=sin(x)/cos(x); set terminal png size 960,720; set output 'graph.png'; plot f(x)\"");
 }
 
 // VISUAL DUMP

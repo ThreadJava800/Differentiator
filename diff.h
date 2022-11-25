@@ -201,6 +201,14 @@ double funcValue(DiffNode_t* node, double x);
 
 void tailor(DiffNode_t* node, int pow, double x0);
 
+void printPlotOper (DiffNode_t* node, const char* oper, FILE* file);
+
+void printTrigPlot(DiffNode_t* node, FILE* file, const char* prep);
+
+void drawNode(DiffNode_t* node, FILE* file);
+
+void drawGraph(DiffNode_t* node);
+
 //
 
 void printNodeVal(DiffNode_t* node, FILE* file);
