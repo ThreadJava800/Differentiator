@@ -197,9 +197,11 @@ DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy) {
 #define replaceValVal(node, oper) {                                       \
     (node)->type = NUM;                                                    \
     (node)->value.num = LEFT(node)->value.num oper RIGHT(node)->value.num;  \
-    LEFT(node)  = nullptr;                                                   \
-    RIGHT(node) = nullptr;                                                    \
-}                                                                              \
+    free(LEFT(node));                                                        \
+    free(RIGHT(node));                                                        \
+    LEFT(node)  = nullptr;                                                     \
+    RIGHT(node) = nullptr;                                                      \
+}                                                                                \
 
 void hangNode(DiffNode_t* node, const DiffNode_t* info) {
     if (!node || !info) return;
@@ -290,7 +292,8 @@ void easierVarVal(DiffNode_t* node, DiffNode_t* varNode, DiffNode_t* valNode) {
 }
 
 void makeNodeEasy(DiffNode_t* node) {
-    if (!node || !node->left || !node->right) return;
+    if (!node) return;
+    if (!node->left || !node->right) return;
 
     if (IS_NUM(LEFT(node)) && IS_NUM(RIGHT(node))) {
         easierValVal(node);
@@ -315,7 +318,7 @@ void easierEqu(DiffNode_t* start) {
 
 // DIFF SECTION
 
-void diffMul(DiffNode_t* node) {
+void diffMul(DiffNode_t* node, FILE* file) {
     if (!node) return;
 
     DiffNode_t* interimNode1 = diffNodeCtor(nullptr, nullptr, nullptr);
@@ -328,11 +331,11 @@ void diffMul(DiffNode_t* node) {
 
     interimNode1->right = nodeCopy(node->right);
     DiffNode_t* leftNotDiffed = nodeCopy(node->left);
-    nodeDiff(node->left);
+    nodeDiff(node->left, file);
     interimNode1->left = node->left;
 
     interimNode2->left = leftNotDiffed;
-    nodeDiff(node->right);
+    nodeDiff(node->right, file);
     interimNode2->right = node->right;
 
     node->value.opt = ADD;
@@ -340,7 +343,7 @@ void diffMul(DiffNode_t* node) {
     node->right = interimNode2;
 }
 
-void diffDiv(DiffNode_t* node) {
+void diffDiv(DiffNode_t* node, FILE* file) {
     if (!node) return;
 
     DiffNode_t* interimNode1 = diffNodeCtor(nullptr, nullptr, node->prev);
@@ -361,11 +364,11 @@ void diffDiv(DiffNode_t* node) {
     powNode->right->type    = NUM;
     powNode->right->value.num     = 2;
 
-    nodeDiff(node->left);
+    nodeDiff(node->left, file);
     interimNode1->left  = node->left;
     interimNode1->right = denominator;
 
-    nodeDiff(node->right);
+    nodeDiff(node->right, file);
     interimNode2->left  = numerator;
     interimNode2->right = node->right;
 
@@ -377,7 +380,7 @@ void diffDiv(DiffNode_t* node) {
     node->right = powNode;
 }
 
-void diffVarPowVal(DiffNode_t* node) {
+void diffVarPowVal(DiffNode_t* node, FILE* file) {
     if (!node) return;
 
     DiffNode_t* leftCopy  = nodeCopy(node->left);
@@ -386,7 +389,7 @@ void diffVarPowVal(DiffNode_t* node) {
     rightNode->type = OP;
     rightNode->value.opt  = MUL;
 
-    nodeDiff(node->left);
+    nodeDiff(node->left, file);
 
     rightNode->type = OP;
     rightNode->value.opt  = POW;
@@ -409,7 +412,7 @@ void diffVarPowVal(DiffNode_t* node) {
     node->right = mulLeftNode;
 }
 
-void diffVarPowVar(DiffNode_t* node) {
+void diffVarPowVar(DiffNode_t* node, FILE* file) {
     if (!node) return;
 
     DiffNode_t* rootCopy = nodeCopy(node);
@@ -430,38 +433,39 @@ void diffVarPowVar(DiffNode_t* node) {
     LEFT(rightNode) = RIGHT(rootCopy);
     RIGHT(rightNode) = lnNode;
 
-    nodeDiff(rightNode);
+    nodeDiff(rightNode, file);
     node->right = rightNode;
 }
 
-void diffValPowVar(DiffNode_t* node) {
+void diffValPowVar(DiffNode_t* node, FILE* file) {
     if (!node) return;
 
     node->value.opt = MUL;
-    nodeDiff(node->right);
+    nodeDiff(node->right, file);
     node->left->value.num = log(node->left->value.num);
 }
 
-void diffPow(DiffNode_t* node) {
+void diffPow(DiffNode_t* node, FILE* file) {
     if (!node) return;
 
     if ((IS_OP(LEFT(node)) || IS_VAR(LEFT(node))) && IS_NUM(RIGHT(node))) {
-        diffVarPowVal(node);
+        diffVarPowVal(node, file);
     } else if ((IS_VAR(LEFT(node)) || IS_OP(LEFT(node))) && (IS_VAR(RIGHT(node)) || IS_OP(RIGHT(node)))) {
-        diffVarPowVar(node);
+        diffVarPowVar(node, file);
     } else if (IS_NUM(LEFT(node)) && (IS_OP(RIGHT(node)) || IS_VAR(RIGHT(node)))) {
-        diffValPowVar(node);
+        diffValPowVar(node, file);
     } else if (IS_NUM(LEFT(node)) && IS_NUM(RIGHT(node))) {
         free(LEFT(node));
         free(RIGHT(node));
         node->type = NUM;
         node->value.num  = 0;
+        LEFT(node) = RIGHT(node) = nullptr;
     } else {
         return;
     }
 }
 
-void diffCos(DiffNode_t* node) {
+void diffCos(DiffNode_t* node, FILE* file) {
     if (!node) return;
 
     node->value.opt = SIN;
@@ -473,7 +477,7 @@ void diffCos(DiffNode_t* node) {
     LEFT(newLeft)->type = NUM;
     LEFT(newLeft)->value.num = -1;
     
-    nodeDiff(node->right);
+    nodeDiff(node->right, file);
     RIGHT(newLeft) = node->right;
 
     node->value.opt = MUL;
@@ -481,7 +485,7 @@ void diffCos(DiffNode_t* node) {
     node->left  = newLeft;
 }
 
-void diffSin(DiffNode_t* node) {
+void diffSin(DiffNode_t* node, FILE* file) {
     if (!node) return;
 
     node->value.opt = COS;
@@ -490,10 +494,10 @@ void diffSin(DiffNode_t* node) {
     node->type = OP;
     node->value.opt = MUL;
     node->left = newRight;
-    nodeDiff(node->right);
+    nodeDiff(node->right, file);
 }
 
-void diffLn(DiffNode_t* node) {
+void diffLn(DiffNode_t* node, FILE* file) {
     if (!node) return;
 
     DiffNode_t* rightCopy = nodeCopy(node->right);
@@ -509,11 +513,11 @@ void diffLn(DiffNode_t* node) {
     node->value.opt = MUL;
     node->right = divNode;
 
-    nodeDiff(rightCopy);
+    nodeDiff(rightCopy, file);
     node->left = rightCopy;
 }
 
-void nodeDiff(DiffNode_t* node) {
+void nodeDiff(DiffNode_t* node, FILE* file) {
     if (!node) return;
 
     DiffNode_t* startNode = nodeCopy(node);
@@ -529,45 +533,46 @@ void nodeDiff(DiffNode_t* node) {
         switch(node->value.opt) {
             case ADD:
             case SUB:
-                nodeDiff(node->left);
-                nodeDiff(node->right);
+                nodeDiff(node->left, file);
+                nodeDiff(node->right, file);
                 break;
             case MUL:
-                diffMul(node);
+                diffMul(node, file);
                 break;
             case DIV:
-                diffDiv(node);
+                diffDiv(node, file);
                 break;
             case POW:
-                diffPow(node);
+                diffPow(node, file);
                 break;
             case SIN:
-                diffSin(node);
+                diffSin(node, file);
                 break;
             case COS:
-                diffCos(node);
+                diffCos(node, file);
                 break;
             case LN:
-                diffLn(node);
+                diffLn(node, file);
                 break;
             case OPT_DEFAULT:
             default:
                 break;
         }
     }
-
-    printRandomPhrase(texFile);
-    printLineToTex(texFile, "\\\\$(");
-    nodeToTex(startNode, texFile);
-    printLineToTex(texFile, ")'$ = ");
-    diffToTex(node);
-    diffNodeDtor(startNode);
+    if (file) {
+        printRandomPhrase(file);
+        printLineToTex(file, "\\\\$(");
+        nodeToTex(startNode, file);
+        printLineToTex(file, ")'$ = ");
+        diffToTex(node);
+        diffNodeDtor(startNode);
+    }
 }
 
 int equDiff(DiffNode_t* start) {
     DIFF_CHECK(!start, DIFF_NULL);
 
-    nodeDiff(start);
+    nodeDiff(start, texFile);
     addPrevs(start);
 
     return DIFF_OK;
@@ -799,21 +804,49 @@ void changeVarToNums(DiffNode_t* node, double num) {
     changeVarToNums(node->right, num);
 }
 
+#define BASIC_OPER(val1, val2, oper) val1 oper val2
+
 double funcValue(DiffNode_t* node, double x) {
     if (!node) return 0;
 
-    changeVarToNums(node, x);
-    easierEqu(node);
+    if (IS_NUM(node)) return node->value.num;
+    if (IS_VAR(node)) return x;
 
-    return node->value.num;
+    int oper = node->value.opt;
+    switch(oper) {
+        case ADD:
+            return BASIC_OPER(funcValue(LEFT(node), x), funcValue(RIGHT(node), x), +);
+        case MUL:
+            return BASIC_OPER(funcValue(LEFT(node), x), funcValue(RIGHT(node), x), *);
+        case DIV:
+            return BASIC_OPER(funcValue(LEFT(node), x), funcValue(RIGHT(node), x), /);
+        case SUB:
+            return BASIC_OPER(funcValue(LEFT(node), x), funcValue(RIGHT(node), x), -);
+        case POW:
+            return pow(funcValue(LEFT(node), x), funcValue(RIGHT(node), x));
+        case SIN:
+            return sin(funcValue(RIGHT(node), x));
+        case COS:
+            return cos(funcValue(RIGHT(node), x));
+        case LN:
+            return log(funcValue(RIGHT(node), x));
+        default:
+            return 0;
+    }
+
 }
 
-void tailor(DiffNode_t* node, int pow) {
+void tailor(DiffNode_t* node, int pow, double x0) {
     if (!node || pow <= 0) return;
 
-    for (int i = 0; i < pow; i++) {
+    DiffNode_t* tailorCopy = nodeCopy(node);
 
+    fprintf(texFile, "\n$$ %lf + ", funcValue(tailorCopy, x0));
+    for (int i = 1; i < pow; i++) {
+        nodeDiff(tailorCopy, nullptr);
+        fprintf(texFile, "%lf * {(x-%lf)}^{%d} + ", funcValue(tailorCopy, x0), x0, i);
     }
+    fprintf(texFile, "o({x}^{%d}) $$\\\\\n", pow);
 }
 
 // VISUAL DUMP

@@ -137,25 +137,25 @@ void easierEqu(DiffNode_t* start);
 
 // ALL FOR DIFF
 
-void diffMul(DiffNode_t* node);
+void diffMul(DiffNode_t* node, FILE* file);
 
-void diffDiv(DiffNode_t* node);
+void diffDiv(DiffNode_t* node, FILE* file);
 
-void diffVarPowVal(DiffNode_t* node);
+void diffVarPowVal(DiffNode_t* node, FILE* file);
 
-void diffVarPowVar(DiffNode_t* node);
+void diffVarPowVar(DiffNode_t* node, FILE* file);
 
-void diffValPowVar(DiffNode_t* node);
+void diffValPowVar(DiffNode_t* node, FILE* file);
 
-void diffPow(DiffNode_t* node);
+void diffPow(DiffNode_t* node, FILE* file);
 
-void diffCos(DiffNode_t* node);
+void diffCos(DiffNode_t* node, FILE* file);
 
-void diffSin(DiffNode_t* node);
+void diffSin(DiffNode_t* node, FILE* file);
 
-void diffLn(DiffNode_t* node);
+void diffLn(DiffNode_t* node, FILE* file);
 
-void nodeDiff(DiffNode_t* node);
+void nodeDiff(DiffNode_t* node, FILE* file);
 
 int equDiff(DiffNode_t* start);
 
@@ -197,7 +197,7 @@ void changeVarToNums(DiffNode_t* node, double num);
 
 double funcValue(DiffNode_t* node, double x);
 
-void tailor(DiffNode_t* node, int pow);
+void tailor(DiffNode_t* node, int pow, double x0);
 
 //
 
