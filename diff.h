@@ -14,7 +14,7 @@ const double EPSILON = 1e-12;
 
 const int MAX_REPLACE_COUNT = 26;
 
-const int NEED_TEX_REPLACEMENT = 1;
+const int NEED_TEX_REPLACEMENT = 6;
 
 const char phrases[][MAX_WORD_LENGTH] = {
     "Совершенно очевидно, что\\n\\n\n",
@@ -83,6 +83,9 @@ struct DiffNode_t {
 #define IS_SIN(node) node->value.opt == SIN
 #define IS_LN(node) node->value.opt == LN
 #define IS_DIV(node) node->value.opt == DIV
+#define IS_MUL(node) node->value.opt == MUL
+#define IS_ADD(node) node->value.opt == ADD
+#define IS_POW(node) node->value.opt == POW
 
 #define SKIP_SPACES() {      \
     while (symb == ' ') {     \
@@ -180,13 +183,21 @@ void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex);
 
 void makeReplacements(DiffNode_t* start, FILE* file);
 
-int diffToTex(DiffNode_t* startNode, FILE* file);
+int diffToTex(DiffNode_t* startNode);
 
 void initTex(FILE* file);
 
 void printLineToTex(FILE* file, const char* string);
 
 void printRandomPhrase(FILE* file);
+
+// OTHER FUNCS
+
+void changeVarToNums(DiffNode_t* node, double num);
+
+double funcValue(DiffNode_t* node, double x);
+
+void tailor(DiffNode_t* node, int pow);
 
 //
 

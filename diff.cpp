@@ -176,14 +176,6 @@ DiffNode_t* parseEquation(FILE *readFile) {
     parseNode(&startNode, readFile);
     addPrevs(startNode);
 
-    equDiff(startNode);
-    addPrevs(startNode);
-
-    // printLineToTex(texFile, "После очевидных упрощений имеем:\n");
-    // easierEqu(startNode);
-
-    diffToTex(startNode, texFile);
-
     return startNode;
 }
 
@@ -220,6 +212,15 @@ void hangNode(DiffNode_t* node, const DiffNode_t* info) {
 
 // EASIER SECTION
 
+#define easierTrigVal(node, oper) {                                       \
+    node->type = NUM;                                                      \
+    node->value.num = oper(RIGHT(node)->value.num);                         \
+    free(LEFT(node));                                                        \
+    free(RIGHT(node));                                                        \
+    LEFT(node)  = nullptr;                                                     \
+    RIGHT(node) = nullptr;                                                      \
+}                                                                                \
+
 void easierValVal(DiffNode_t* node) {
     if (!node) return;
 
@@ -244,13 +245,22 @@ void easierValVal(DiffNode_t* node) {
             LEFT(node)  = nullptr;                                                     
             RIGHT(node) = nullptr;                                                      
             break;
-        case OPT_DEFAULT:
         case LN:
+            easierTrigVal(node, log);                                                  
+            break;
         case COS:
+            easierTrigVal(node, cos);                                                  
+            break;
         case SIN:
+            easierTrigVal(node, sin);                                                  
+            break;
+        case OPT_DEFAULT:
         default:
+            return;
             break;
     }
+
+    makeNodeEasy(node->prev);
 }
 
 void easierVarVal(DiffNode_t* node, DiffNode_t* varNode, DiffNode_t* valNode) {
@@ -258,20 +268,25 @@ void easierVarVal(DiffNode_t* node, DiffNode_t* varNode, DiffNode_t* valNode) {
     if (IS_COS(node) || IS_SIN(node) || IS_LN(node)) return;
     if (IS_DIV(node) && IS_NUM(LEFT(node))) return;
 
-    if (compDouble(valNode->value.num, 1)) {
+    if (compDouble(valNode->value.num, 1) && (IS_MUL(node) || IS_POW(node))) {
         hangNode(valNode->prev, varNode);
         free(valNode);
     } else if (compDouble(valNode->value.num, 0)) {
         node->type = NUM;
-        if (node->value.opt == POW) {
+        if (IS_POW(node)) {
             node->value.num = 1;
-        } else {
+            node->left = node->right = nullptr;
+        } else if (IS_MUL(node)) {
             node->value.num = 0;
+            node->left = node->right = nullptr;
+        } else if (IS_ADD(node)) {
+            hangNode(valNode->prev, varNode);
         }
-        node->left = node->right = nullptr;
     } else {
         return;
     }
+
+    makeNodeEasy(node->prev);
 }
 
 void makeNodeEasy(DiffNode_t* node) {
@@ -545,7 +560,7 @@ void nodeDiff(DiffNode_t* node) {
     printLineToTex(texFile, "\\\\$(");
     nodeToTex(startNode, texFile);
     printLineToTex(texFile, ")'$ = ");
-    diffToTex(node, texFile);
+    diffToTex(node);
     diffNodeDtor(startNode);
 }
 
@@ -553,6 +568,7 @@ int equDiff(DiffNode_t* start) {
     DIFF_CHECK(!start, DIFF_NULL);
 
     nodeDiff(start);
+    addPrevs(start);
 
     return DIFF_OK;
 }
@@ -736,9 +752,8 @@ void makeReplacements(DiffNode_t* start, FILE* file) {
     printTexReplaced(start, file, replacedNodes, replacedIndex);
 }
 
-int diffToTex(DiffNode_t* startNode, FILE* file) {
+int diffToTex(DiffNode_t* startNode) {
     DIFF_CHECK(!startNode, DIFF_NULL);
-    DIFF_CHECK(!file, DIFF_FILE_NULL);
 
     makeReplacements(startNode, texFile);
 
@@ -768,6 +783,37 @@ void printRandomPhrase(FILE* file) {
     int phLen = sizeof(phrases) / sizeof(phrases[0]);
 
     fprintf(texFile, "%s", phrases[rand() % phLen]);
+}
+
+// OTHERS
+
+void changeVarToNums(DiffNode_t* node, double num) {
+    if (!node) return;
+
+    if (IS_VAR(node)) {
+        node->type = NUM;
+        node->value.num = num;
+    }
+
+    changeVarToNums(node->left, num);
+    changeVarToNums(node->right, num);
+}
+
+double funcValue(DiffNode_t* node, double x) {
+    if (!node) return 0;
+
+    changeVarToNums(node, x);
+    easierEqu(node);
+
+    return node->value.num;
+}
+
+void tailor(DiffNode_t* node, int pow) {
+    if (!node || pow <= 0) return;
+
+    for (int i = 0; i < pow; i++) {
+
+    }
 }
 
 // VISUAL DUMP
@@ -835,11 +881,12 @@ void graphNode(DiffNode_t *node, FILE *tempFile) {
     
     fprintf(
                 tempFile, 
-                " | {left: %p | right: %p} | current: %p | prev %p}}\"];\n", 
+                " | {left: %p | right: %p} | current: %p | prev %p | type: %d }}\"];\n", 
                 node->left,
                 node->right,
                 node,
-                node->prev
+                node->prev,
+                node->type
             );
 
     if (node->left) {
