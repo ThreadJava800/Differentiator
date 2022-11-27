@@ -596,7 +596,7 @@ int equDiff(DiffNode_t* start) {
     nodeDiff(start, texFile);
     addPrevs(start);
 
-    fprintf(texFile, "После очевидных упрощений имеем:\n\n");
+    fprintf(texFile, "\\bigskip После очевидных упрощений имеем:\n\n");
     easierEqu(start);
     diffToTex(start);
 
@@ -635,15 +635,22 @@ void diffNodeDtor(DiffNode_t* node) {
 void anyTex(DiffNode_t* node, const char* oper, FILE* file) {
     if (!node || !oper || !file) return;
 
-    if (!(IS_NUM(LEFT(node)) || IS_VAR(LEFT(node)))) fprintf(file, "(");
+    bool needOper = !(IS_NUM(LEFT(node)) && IS_VAR(RIGHT(node)) && IS_MUL(node));
+    bool needLeftBracket  = !(IS_NUM(LEFT(node))  || IS_VAR(LEFT(node)))  && ((LEFT(node))->texSymb == '\0') 
+                                                                          && (IS_MUL(node));
+    bool needRightBracket = !(IS_NUM(RIGHT(node)) || IS_VAR(RIGHT(node))) && ((RIGHT(node))->texSymb == '\0')
+                                                                          && (IS_MUL(node));
+
+    // printf("%c ", (LEFT(node))->texSymb);
+    if (needLeftBracket) fprintf(file, "(");
     printNodeReplaced(node->left, file);
-    if (!(IS_NUM(LEFT(node)) || IS_VAR(LEFT(node)))) fprintf(file, ")");
+    if (needLeftBracket) fprintf(file, ")");
 
-    fprintf(file, "%s", oper);
+    if (needOper) fprintf(file, "%s", oper);
 
-    if (!(IS_NUM(RIGHT(node)) || IS_VAR(RIGHT(node)))) fprintf(file, "(");
+    if (needRightBracket) fprintf(file, "(");
     printNodeReplaced(node->right, file);
-    if (!(IS_NUM(RIGHT(node)) || IS_VAR(RIGHT(node)))) fprintf(file, ")");
+    if (needRightBracket) fprintf(file, ")");
 }
 
 void powTex(DiffNode_t* node, FILE* file) {
@@ -742,10 +749,10 @@ void printTexReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int r
     fprintf(file, "$");
 
     if (replacedSize != 0) {
-        fprintf(file, "\n\nгде:\n\n");
+        fprintf(file, ", где:\n\n\\bigskip");
     }
     for (int i = 0; i < replacedSize; i++) {
-        fprintf(file, "%c = $", 65 + i);
+        fprintf(file, "\\qquad %c = $", 65 + i);
         nodeToTex(replaced[i], file);
         fprintf(file, "$\n\n");
     }
@@ -756,12 +763,12 @@ void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex) {
     if (getTreeDepth(node) < NEED_TEX_REPLACEMENT) return;
 
     if (getTreeDepth(node) == NEED_TEX_REPLACEMENT) {
-        for (int i = 0; i < *replacedIndex; i++) {
-            if (compareSubtrees(node, replaced[i])) {
-                node->texSymb = (char) (65 + i);
-                return;
-            }
-        }
+        // for (int i = 0; i < *replacedIndex; i++) {
+        //     if (compareSubtrees(node, replaced[i])) {
+        //         node->texSymb = (char) (65 + i);
+        //         return;
+        //     }
+        // }
 
         replaced[*replacedIndex] = node;
         node->texSymb = (char) (65 + *replacedIndex);
@@ -783,10 +790,19 @@ void makeReplacements(DiffNode_t* start, FILE* file) {
     printTexReplaced(start, file, replacedNodes, replacedIndex);
 }
 
+void removeLetters(DiffNode_t* start) {
+    if (!start) return;
+
+    if (LEFT(start))  removeLetters(LEFT(start));
+    if (RIGHT(start)) removeLetters(RIGHT(start));
+    start->texSymb = '\0';
+}
+
 int diffToTex(DiffNode_t* startNode) {
     DIFF_CHECK(!startNode, DIFF_NULL);
 
     makeReplacements(startNode, texFile);
+    removeLetters(startNode);
 
     return DIFF_OK;
 }

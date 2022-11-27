@@ -1,0 +1,100 @@
+\documentclass{article}
+
+\usepackage{amssymb, amsmath, multicol}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage[utf8]{inputenc}
+\usepackage[T1,T2A]{fontenc}
+\usepackage[russian]{babel}
+\begin{document}
+Дано: $B \cdot A$, где:
+
+\bigskip\qquad A = $sin(3.00 \cdot ({x}^{5.00}))$
+
+\qquad B = ${cos(x \cdot 3.00)}^{2.00}$
+
+\bigskip Совершенно очевидно, что
+
+$(x \cdot 3.00)'$ = $1.00 \cdot 3.00 + x \cdot 0.00$
+
+\bigskip Иииииииииииииии если:
+
+$(cos(x \cdot 3.00))'$ = $A \cdot (sin(x \cdot 3.00))$, где:
+
+\bigskip\qquad A = $-1.00 \cdot (1.00 \cdot 3.00 + x \cdot 0.00)$
+
+
+
+\bigskip Совершенно очевидно, что
+
+$({cos(x \cdot 3.00)}^{2.00})'$ = $(B \cdot (sin(x \cdot 3.00))) \cdot (2.00 \cdot A)$, где:
+
+\bigskip\qquad A = ${cos(x \cdot 3.00)}^{2.00 - 1.00}$
+
+\qquad B = $-1.00 \cdot (1.00 \cdot 3.00 + x \cdot 0.00)$
+
+
+
+\bigskip Ничего не понял, но очень интересно:
+
+$({x}^{5.00})'$ = $1.00 \cdot A$, где:
+
+\bigskip\qquad A = $5.00 \cdot ({x}^{5.00 - 1.00})$
+
+
+
+\bigskip Вас это не шокирует?
+
+$(3.00 \cdot ({x}^{5.00}))'$ = $0.00 \cdot ({x}^{5.00}) + 3.00 \cdot (1.00 \cdot A)$, где:
+
+\bigskip\qquad A = $5.00 \cdot ({x}^{5.00 - 1.00})$
+
+
+
+\bigskip Ничего не понял, но очень интересно:
+
+$(sin(3.00 \cdot ({x}^{5.00})))'$ = $B \cdot (0.00 \cdot ({x}^{5.00}) + 3.00 \cdot (1.00 \cdot A))$, где:
+
+\bigskip\qquad A = $5.00 \cdot ({x}^{5.00 - 1.00})$
+
+\qquad B = $cos(3.00 \cdot ({x}^{5.00}))$
+
+
+
+\bigskip Вас это не шокирует?
+
+$(({cos(x \cdot 3.00)}^{2.00}) \cdot (sin(3.00 \cdot ({x}^{5.00}))))'$ = $((F \cdot (sin(x \cdot 3.00))) \cdot (2.00 \cdot E)) \cdot D + C \cdot (B \cdot (0.00 \cdot ({x}^{5.00}) + 3.00 \cdot (1.00 \cdot A)))$, где:
+
+\bigskip\qquad A = $5.00 \cdot ({x}^{5.00 - 1.00})$
+
+\qquad B = $cos(3.00 \cdot ({x}^{5.00}))$
+
+\qquad C = ${cos(x \cdot 3.00)}^{2.00}$
+
+\qquad D = $sin(3.00 \cdot ({x}^{5.00}))$
+
+\qquad E = ${cos(x \cdot 3.00)}^{2.00 - 1.00}$
+
+\qquad F = $-1.00 \cdot (1.00 \cdot 3.00 + x \cdot 0.00)$
+
+
+
+\bigskip После очевидных упрощений имеем:
+
+$(F \cdot E) \cdot D + C \cdot (B \cdot A)$, где:
+
+\bigskip\qquad A = $3.00 \cdot (5.00 \cdot ({x}^{4.00}))$
+
+\qquad B = $cos(3.00 \cdot ({x}^{5.00}))$
+
+\qquad C = ${cos(x \cdot 3.00)}^{2.00}$
+
+\qquad D = $sin(3.00 \cdot ({x}^{5.00}))$
+
+\qquad E = $2.00 \cdot (cos(x \cdot 3.00))$
+
+\qquad F = $-3.00 \cdot (sin(x \cdot 3.00))$
+
+
+\end{document}

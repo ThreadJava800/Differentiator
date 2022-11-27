@@ -12,19 +12,19 @@ const int MAX_WORD_LENGTH = 4096;
 
 const double EPSILON = 1e-12;
 
-const int MAX_REPLACE_COUNT = 26;
+const int MAX_REPLACE_COUNT = 52;
 
-const int NEED_TEX_REPLACEMENT = 20;
+const int NEED_TEX_REPLACEMENT = 4;
 
 const char phrases[][MAX_WORD_LENGTH] = {
-    "\n\nСовершенно очевидно, что\n\n",
-    "\n\nЗаметим, что\n\n",
-    "\n\nВас это не шокирует?\n\n",
-    "\n\nОчередное халявное преобразование:\n\n",
-    "\n\nЭто преобразование позаимствуем из вступительных испытаний в советские ясли:\n\n",
-    "\n\nИииииииииииииии если:\n\n",
-    "\n\nНичего не понял, но очень интересно:\n\n",
-    "\n\nЛюбому советскому первокласснику очевидно, что\n\n",
+    "\\bigskip Совершенно очевидно, что\n\n",
+    "\\bigskip Заметим, что\n\n",
+    "\\bigskip Вас это не шокирует?\n\n",
+    "\\bigskip Очередное халявное преобразование:\n\n",
+    "\\bigskip Это преобразование позаимствуем из вступительных испытаний в советские ясли:\n\n",
+    "\\bigskip Иииииииииииииии если:\n\n",
+    "\\bigskip Ничего не понял, но очень интересно:\n\n",
+    "\\bigskip Любому советскому первокласснику очевидно, что\n\n",
 };
 
 enum DiffError_t {
@@ -85,6 +85,9 @@ struct DiffNode_t {
 #define IS_MUL(node) node->value.opt == MUL
 #define IS_ADD(node) node->value.opt == ADD
 #define IS_POW(node) node->value.opt == POW
+
+#define RIGHT_VAR_LEFT_NUM(node) (IS_NUM(LEFT(node))  &&  IS_VAR(RIGHT(node)))
+#define LEFT_VAR_RIGHT_NUM(node) (IS_NUM(RIGHT(node)) &&  IS_VAR(LEFT(node)))
 
 #define SKIP_SPACES() {      \
     while (symb == ' ') {     \
@@ -185,6 +188,8 @@ void printTexReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int r
 void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex);
 
 void makeReplacements(DiffNode_t* start, FILE* file);
+
+void removeLetters(DiffNode_t* start);
 
 int diffToTex(DiffNode_t* startNode);
 
