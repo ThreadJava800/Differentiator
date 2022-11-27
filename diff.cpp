@@ -641,7 +641,6 @@ void anyTex(DiffNode_t* node, const char* oper, FILE* file) {
     bool needRightBracket = !(IS_NUM(RIGHT(node)) || IS_VAR(RIGHT(node))) && ((RIGHT(node))->texSymb == '\0')
                                                                           && (IS_MUL(node));
 
-    // printf("%c ", (LEFT(node))->texSymb);
     if (needLeftBracket) fprintf(file, "(");
     printNodeReplaced(node->left, file);
     if (needLeftBracket) fprintf(file, ")");
@@ -763,13 +762,6 @@ void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex) {
     if (getTreeDepth(node) < NEED_TEX_REPLACEMENT) return;
 
     if (getTreeDepth(node) == NEED_TEX_REPLACEMENT) {
-        // for (int i = 0; i < *replacedIndex; i++) {
-        //     if (compareSubtrees(node, replaced[i])) {
-        //         node->texSymb = (char) (65 + i);
-        //         return;
-        //     }
-        // }
-
         replaced[*replacedIndex] = node;
         node->texSymb = (char) (65 + *replacedIndex);
         (*replacedIndex)++;
