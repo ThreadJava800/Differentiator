@@ -61,7 +61,7 @@ bool compareSubtrees(DiffNode_t* node1, DiffNode_t* node2) {
                 if (compDouble(node1->value.num, node2->value.num)) return true;
                 break;
             case VAR:
-                if (strcasecmp(node1->value.var, node2->value.var) == 0) return true;
+                if (node1->value.var == node2->value.var) return true;
                 break;
             case NODET_DEFAULT:
             default:
@@ -81,60 +81,169 @@ size_t factorial(int pow) {
 
 // PARSER
 
-int addNodeVal(DiffNode_t* node, char* value) {
-    DIFF_CHECK(!node, DIFF_NULL);
-    DIFF_CHECK(!value, DIFF_FILE_NULL);
+//G    = E '\0'
+//E    = T{[+-]]T}*
+//T    = ST{[*/]ST}*
+//ST   = P{[^]P}*
+//P    = '(' E ')' | X
+//X    = [a-z] | N
+//N    = [0-9]+
 
-    if (isdigit(*value)) {
-        double doubleVal = NAN;
-        sscanf(value, "%le", &doubleVal);
-        node->type = NUM;
-        node->value.num = doubleVal;
-    } else if (*value == '-') {
-        if (*(value + 1) != '\0') {
-            double doubleVal = NAN;
-            sscanf(value, "%le", &doubleVal);
-            node->type = NUM;
-            node->value.num = doubleVal;
-        } else {
-            node->type = OP;
-            node->value.opt = SUB;
-        }
-    } else if (strcasecmp(value, "sin") == 0) {
-        node->type = OP;
-        node->value.opt = SIN;
-    } else if (strcasecmp(value, "cos") == 0) {
-        node->type = OP;
-        node->value.opt = COS;
-    } else if (strcasecmp(value, "ln")  == 0) {
-        node->type = OP;
-        node->value.opt = LN;
+DiffNode_t* getE(const char** s);
+
+DiffNode_t* getT(const char** s);
+
+DiffNode_t* getP(const char** s);
+
+DiffNode_t* getX(const char** s);
+
+DiffNode_t* getN(const char** s);
+
+DiffNode_t* getSt(const char** s);
+
+DiffNode_t* getPow(const char** s);
+
+DiffNode_t* setOper(DiffNode_t* val1, DiffNode_t* val2, OpType_t oper) {
+    if (!val1 || !val2) return nullptr;
+
+    DiffNode_t* operVal = diffNodeCtor(nullptr, nullptr, nullptr);
+    operVal->type = OP;
+    operVal->value.opt = oper;
+    LEFT(operVal)  = val1;
+    RIGHT(operVal) = val2;
+
+    return operVal;
+}
+
+DiffNode_t* getN(const char** s) {
+    int val = 0;
+    const char* oldS = *s;
+
+    while ('0' <= **s && '9' >= **s) {
+        val = val * 10 + (**s - '0');
+        (*s)++;
+    }
+
+    if(*s == oldS) return nullptr;
+
+    DiffNode_t* numNode = diffNodeCtor(nullptr, nullptr, nullptr);
+    numNode->type = NUM;
+    numNode->value.num = val;
+
+    return numNode;
+}
+
+DiffNode_t* getP(const char** s) {
+    DiffNode_t* val = nullptr;
+    if (**s == '(') {
+        (*s)++;
+        val = getE(s);
+        if(**s != ')') return nullptr;
+        (*s)++;
     } else {
-        switch(*value) {
-            case '+':
-                node->type = OP;
-                node->value.opt = ADD;
-                break;
-            case '*':
-                node->type = OP;
-                node->value.opt = MUL;
-                break;
-            case '/':
-                node->type = OP;
-                node->value.opt = DIV;
-                break;
-            case '^':
-                node->type = OP;
-                node->value.opt = POW;
-                break;
-            default:
-                node->type = VAR;
-                node->value.var  = strdup(value);
-                break;
+        return getX(s);
+    }
+
+    return val;
+}
+
+DiffNode_t* getX(const char** s) {
+    DiffNode_t* node = nullptr;
+
+    if (!strncmp(*s, "cos", 3)) {
+        (*s) += 3;
+
+        DiffNode_t* nullNode = diffNodeCtor(nullptr, nullptr, nullptr);
+        nullNode->type = NUM;
+        nullNode->value.num = 0;
+
+        DiffNode_t* rightNode = getP(s);
+        return setOper(nullNode, rightNode, COS);
+    }
+
+    // if (strncmp(*s, "sin", 3)) {
+    //     (*s) += 3;
+
+    //     DiffNode_t* nullNode = diffNodeCtor(nullptr, nullptr, nullptr);
+    //     nullNode->type = NUM;
+    //     nullNode->value.num = 0;
+
+    //     DiffNode_t* rightNode = getP(s);
+    //     return setOper(nullNode, nullptr, SIN);
+    // }
+
+    if ('a' <= **s && **s <= 'z') {
+        node = diffNodeCtor(nullptr, nullptr, nullptr);
+        node->type = VAR;
+        node->value.var = **s;
+        (*s)++;
+    } else {
+        return getN(s);
+    }
+
+    return node;
+}
+
+DiffNode_t* getT(const char** s) {
+    DiffNode_t* val1 = getSt(s);
+    if (!(**s == '*' || **s == '/')) return val1;
+
+    while (**s == '*' || **s == '/') {
+        char oper = **s;
+        (*s)++;
+
+        DiffNode_t* val2 = getSt(s);
+
+        if (oper == '*') {
+            return setOper(val1, val2, MUL);
+        } else {
+            return setOper(val1, val2, DIV);
         }
     }
 
-    return DIFF_OK;
+    return val1;
+}
+
+DiffNode_t* getSt(const char** s) {
+    DiffNode_t* val1 = getP(s);
+    if (!(**s == '^')) return val1;
+
+    while (**s == '^') {
+        (*s)++;
+        DiffNode_t* val2 = getP(s);
+
+        return setOper(val1, val2, POW);
+    }
+
+    return val1;
+}
+
+DiffNode_t* getE(const char** s) {
+    DiffNode_t* val1 = getT(s);
+    if (!(**s == '+' || **s == '-')) return val1;
+
+    while (**s == '+' || **s == '-') {
+        char oper = **s;
+        (*s)++;
+
+        DiffNode_t* val2 = getT(s);
+
+        if (oper == '+') {
+            return setOper(val1, val2, ADD);
+        } else {
+            return setOper(val1, val2, SUB);
+        }
+    }
+
+    return val1;
+}
+
+DiffNode_t* getG(const char** s) {
+    DiffNode_t* node = getE(s);
+
+    if (**s != '\0') return nullptr;
+
+    return node;
 }
 
 void addPrevs(DiffNode_t* start) {
@@ -148,51 +257,42 @@ void addPrevs(DiffNode_t* start) {
     if (start->right) addPrevs(start->right);
 }
 
-void parseNode(DiffNode_t** node, FILE* readFile) {
-    if (!readFile || !node) return;
+// void removeImNodes(DiffNode_t* node) {
+//     if (!node) return;
 
-    int symb = getc(readFile);
-    if (symb == ')') {
-        *node = nullptr;
-        return;
-    } else if (symb == '(') {
-        DiffNode_t* newNode = diffNodeCtor(nullptr, nullptr, nullptr);
-        parseNode(&(newNode->left), readFile);
+//     if (IS_VAR(node) && strcasecmp(node->value.var, "") == 0) {
+//         hangNode(node, node->left);
+//     } 
+//     removeImNodes(node->right);
+//     removeImNodes(node->left);
+// }
 
-        symb = getc(readFile);
-        if (symb != '(' && symb != ')') {
-            ungetc(symb, readFile);
-        }
+long int getFileSize(const char *fileAddress) {
+    // assert(fileAddress != nullptr);
 
-        char value[MAX_WORD_LENGTH] = "";
-        fscanf(readFile, "%[^()\t\n]", value);
+    struct stat fileStat = {};
+    stat(fileAddress, &fileStat);
 
-        addNodeVal(newNode, value);
-
-        parseNode(&(newNode->right), readFile);
-        *node = newNode;
-    } else {
-        ungetc(symb, readFile);
-    }
+    return fileStat.st_size;
 }
 
-void removeImNodes(DiffNode_t* node) {
-    if (!node) return;
+char *readTextToBuffer(FILE *file, long int fileSize) {
+    // assert(fileSize >= 0);
 
-    if (IS_VAR(node) && strcasecmp(node->value.var, "") == 0) {
-        hangNode(node, node->left);
-    } 
-    removeImNodes(node->right);
-    removeImNodes(node->left);
+    char *buffer = (char *) calloc((size_t) fileSize + 1, sizeof(char)); //fileSize can't be negative!
+    // assert(buffer != nullptr);
+
+    fread(buffer, sizeof(char), (size_t) fileSize + 1, file); //fileSize can't be negative!
+
+    return buffer;
 }
 
-DiffNode_t* parseEquation(FILE *readFile) {
-    if (!readFile) return nullptr;
+DiffNode_t* parseEquation(const char** s) {
+    if (!s) return nullptr;
 
-    DiffNode_t* startNode = diffNodeCtor(nullptr, nullptr, nullptr);
-    parseNode(&startNode, readFile);
+    DiffNode_t* startNode = getG(s);
     addPrevs(startNode);
-    removeImNodes(startNode);
+    // removeImNodes(startNode);
 
     return startNode;
 }
@@ -611,7 +711,8 @@ DiffNode_t* openDiffFile(const char *fileName, const char *texName) {
 
     srand((unsigned int) time(NULL));
 
-    DiffNode_t* root = parseEquation(readFile);
+    const char* equTxt = readTextToBuffer(readFile, getFileSize(fileName));
+    DiffNode_t* root = parseEquation(&equTxt);
     fprintf(texFile, "Дано: ");
     diffToTex(root);
     fclose(readFile);
@@ -728,7 +829,7 @@ void nodeToTex(DiffNode_t* node, FILE *file) {
             fprintf(file, "%.2lf", node->value.num);
             break;
         case VAR:
-            fprintf(file, "%s",  node->value.var);
+            fprintf(file, "%c",  node->value.var);
             break;
         case NODET_DEFAULT:
             break;
@@ -930,7 +1031,7 @@ void drawNode(DiffNode_t* node, FILE* file) {
     if (node->type == NUM) {
         fprintf(file, "%.2lf", node->value.num);
     } else if (node->type == VAR) {
-        fprintf(file, "%s", node->value.var);
+        fprintf(file, "%c", node->value.var);
     } else {
         switch (node->value.opt) {
             case MUL:
@@ -1041,7 +1142,7 @@ void printNodeVal(DiffNode_t* node, FILE* file) {
             fprintf(file, "%.2lf", node->value.num);
             break;
         case VAR:
-            fprintf(file, "%s",  node->value.var);
+            fprintf(file, "%c",  node->value.var);
             break;
         case NODET_DEFAULT:
         default:

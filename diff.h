@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <time.h>
+#include <sys/stat.h>
 
 const int MAX_WORD_LENGTH = 4096;
 
@@ -61,7 +62,7 @@ struct DiffNode_t {
     {
         double      num;
         OpType_t    opt;
-        const char *var;
+        char        var;
     } value;
 
     DiffNode_t *left  = nullptr;
@@ -125,7 +126,7 @@ void parseNode(DiffNode_t** node, FILE* readFile);
 
 void removeImNodes(DiffNode_t* node);
 
-DiffNode_t* parseEquation(FILE* readFile);
+DiffNode_t* parseEquation(const char* s);
 
 DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy);
 
