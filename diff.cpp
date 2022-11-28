@@ -89,20 +89,6 @@ size_t factorial(int pow) {
 //X    = [a-z] | N
 //N    = [0-9]+
 
-DiffNode_t* getE(const char** s);
-
-DiffNode_t* getT(const char** s);
-
-DiffNode_t* getP(const char** s);
-
-DiffNode_t* getX(const char** s);
-
-DiffNode_t* getN(const char** s);
-
-DiffNode_t* getSt(const char** s);
-
-DiffNode_t* getPow(const char** s);
-
 DiffNode_t* setOper(DiffNode_t* val1, DiffNode_t* val2, OpType_t oper) {
     if (!val1 || !val2) return nullptr;
 
@@ -116,6 +102,8 @@ DiffNode_t* setOper(DiffNode_t* val1, DiffNode_t* val2, OpType_t oper) {
 }
 
 DiffNode_t* getN(const char** s) {
+    if (!s || !(*s)) return nullptr;
+
     int val = 0;
     const char* oldS = *s;
 
@@ -134,6 +122,8 @@ DiffNode_t* getN(const char** s) {
 }
 
 DiffNode_t* getP(const char** s) {
+    if (!s || !(*s)) return nullptr;
+
     DiffNode_t* val = nullptr;
     if (**s == '(') {
         (*s)++;
@@ -147,30 +137,34 @@ DiffNode_t* getP(const char** s) {
     return val;
 }
 
+DiffNode_t* parseTrig(OpType_t oper, const char** s) {
+    if (!s || !(*s)) return nullptr;
+
+    DiffNode_t* nullNode = diffNodeCtor(nullptr, nullptr, nullptr);
+    nullNode->type = NUM;
+    nullNode->value.num = 0;
+
+    DiffNode_t* rightNode = getP(s);
+    return setOper(nullNode, rightNode, oper);
+}
+
 DiffNode_t* getX(const char** s) {
+    if (!s || !(*s)) return nullptr;
+
     DiffNode_t* node = nullptr;
 
     if (!strncmp(*s, "cos", 3)) {
         (*s) += 3;
-
-        DiffNode_t* nullNode = diffNodeCtor(nullptr, nullptr, nullptr);
-        nullNode->type = NUM;
-        nullNode->value.num = 0;
-
-        DiffNode_t* rightNode = getP(s);
-        return setOper(nullNode, rightNode, COS);
+        return parseTrig(COS, s);
     }
-
-    // if (strncmp(*s, "sin", 3)) {
-    //     (*s) += 3;
-
-    //     DiffNode_t* nullNode = diffNodeCtor(nullptr, nullptr, nullptr);
-    //     nullNode->type = NUM;
-    //     nullNode->value.num = 0;
-
-    //     DiffNode_t* rightNode = getP(s);
-    //     return setOper(nullNode, nullptr, SIN);
-    // }
+    if (!strncmp(*s, "sin", 3)) {
+        (*s) += 3;
+        return parseTrig(SIN, s);
+    }
+    if (!strncmp(*s, "ln", 2)) {
+        (*s) += 2;
+        return parseTrig(LN, s);
+    }
 
     if ('a' <= **s && **s <= 'z') {
         node = diffNodeCtor(nullptr, nullptr, nullptr);
@@ -185,6 +179,8 @@ DiffNode_t* getX(const char** s) {
 }
 
 DiffNode_t* getT(const char** s) {
+    if (!s || !(*s)) return nullptr;
+
     DiffNode_t* val1 = getSt(s);
     if (!(**s == '*' || **s == '/')) return val1;
 
@@ -195,9 +191,9 @@ DiffNode_t* getT(const char** s) {
         DiffNode_t* val2 = getSt(s);
 
         if (oper == '*') {
-            return setOper(val1, val2, MUL);
+            val1 = setOper(val1, val2, MUL);
         } else {
-            return setOper(val1, val2, DIV);
+            val1 = setOper(val1, val2, DIV);
         }
     }
 
@@ -205,6 +201,8 @@ DiffNode_t* getT(const char** s) {
 }
 
 DiffNode_t* getSt(const char** s) {
+    if (!s || !(*s)) return nullptr;
+
     DiffNode_t* val1 = getP(s);
     if (!(**s == '^')) return val1;
 
@@ -212,13 +210,15 @@ DiffNode_t* getSt(const char** s) {
         (*s)++;
         DiffNode_t* val2 = getP(s);
 
-        return setOper(val1, val2, POW);
+        val1 = setOper(val1, val2, POW);
     }
 
     return val1;
 }
 
 DiffNode_t* getE(const char** s) {
+    if (!s || !(*s)) return nullptr;
+
     DiffNode_t* val1 = getT(s);
     if (!(**s == '+' || **s == '-')) return val1;
 
@@ -229,9 +229,9 @@ DiffNode_t* getE(const char** s) {
         DiffNode_t* val2 = getT(s);
 
         if (oper == '+') {
-            return setOper(val1, val2, ADD);
+            val1 = setOper(val1, val2, ADD);
         } else {
-            return setOper(val1, val2, SUB);
+            val1 = setOper(val1, val2, SUB);
         }
     }
 
@@ -239,8 +239,9 @@ DiffNode_t* getE(const char** s) {
 }
 
 DiffNode_t* getG(const char** s) {
-    DiffNode_t* node = getE(s);
+    if (!s || !(*s)) return nullptr;
 
+    DiffNode_t* node = getE(s);
     if (**s != '\0') return nullptr;
 
     return node;
@@ -257,18 +258,8 @@ void addPrevs(DiffNode_t* start) {
     if (start->right) addPrevs(start->right);
 }
 
-// void removeImNodes(DiffNode_t* node) {
-//     if (!node) return;
-
-//     if (IS_VAR(node) && strcasecmp(node->value.var, "") == 0) {
-//         hangNode(node, node->left);
-//     } 
-//     removeImNodes(node->right);
-//     removeImNodes(node->left);
-// }
-
 long int getFileSize(const char *fileAddress) {
-    // assert(fileAddress != nullptr);
+    if (!fileAddress) return 0;
 
     struct stat fileStat = {};
     stat(fileAddress, &fileStat);
@@ -277,10 +268,10 @@ long int getFileSize(const char *fileAddress) {
 }
 
 char *readTextToBuffer(FILE *file, long int fileSize) {
-    // assert(fileSize >= 0);
+    if (fileSize < 0) return nullptr;
 
     char *buffer = (char *) calloc((size_t) fileSize + 1, sizeof(char)); //fileSize can't be negative!
-    // assert(buffer != nullptr);
+    if (!buffer) return nullptr;
 
     fread(buffer, sizeof(char), (size_t) fileSize + 1, file); //fileSize can't be negative!
 
@@ -292,7 +283,6 @@ DiffNode_t* parseEquation(const char** s) {
 
     DiffNode_t* startNode = getG(s);
     addPrevs(startNode);
-    // removeImNodes(startNode);
 
     return startNode;
 }

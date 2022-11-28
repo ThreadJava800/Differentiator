@@ -118,13 +118,25 @@ size_t factorial(int pow);
 
 // READ TREE FROM FILE
 
-int addNodeVal(DiffNode_t* node, char* value);
-
 void addPrevs(DiffNode_t* start);
 
-void parseNode(DiffNode_t** node, FILE* readFile);
+DiffNode_t* getG(const char** s);
 
-void removeImNodes(DiffNode_t* node);
+DiffNode_t* getE(const char** s);
+
+DiffNode_t* getT(const char** s);
+
+DiffNode_t* getP(const char** s);
+
+DiffNode_t* parseTrig(OpType_t oper, const char** s);
+
+DiffNode_t* getX(const char** s);
+
+DiffNode_t* setOper(DiffNode_t* val1, DiffNode_t* val2, OpType_t oper);
+
+DiffNode_t* getN(const char** s);
+
+DiffNode_t* getSt(const char** s);
 
 DiffNode_t* parseEquation(const char* s);
 

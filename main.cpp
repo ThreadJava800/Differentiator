@@ -5,11 +5,9 @@
 int main() {
     DiffNode_t* res = openDiffFile("test.txt");
     // tailor(res, 6, 0);
-    // drawGraph(res);
-    // equTangent(res, 2);
-    // equDiff(res);
-
-    graphDump(res);
+    drawGraph(res);
+    equTangent(res, 2);
+    equDiff(res);
 
     diffNodeDtor(res);
 
