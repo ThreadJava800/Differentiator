@@ -81,13 +81,13 @@ size_t factorial(int pow) {
 
 // PARSER
 
-//G    = E '\0'
-//E    = T{[+-]]T}*
-//T    = ST{[*/]ST}*
-//ST   = P{[^]P}*
-//P    = '(' E ')' | X
-//X    = [a-z] | N
-//N    = [0-9]+
+// G    = E '\0'
+// E    = T{['+' |  '-']T}*
+// T    = ST{['*' | '/']ST}*
+// ST   = P{[^]P}*
+// P    = '(' E ')' | X
+// X    = ['a'-'z' | sin P | cos P | ln P] | N
+// N    = ['0'-'9']+
 
 DiffNode_t* setOper(DiffNode_t* val1, DiffNode_t* val2, OpType_t oper) {
     if (!val1 || !val2) return nullptr;

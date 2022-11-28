@@ -1,7 +1,18 @@
 # Differentitator
-This is my realization of basic math problem: differentiation, tailor rows, tangent equations and even graphics. Unfortunately, now my differentiator parses equations only full bracket sequences. But I'm looking forward to rewrite it using recursive descend ([you can check an example here](https://github.com/ThreadJava800/Recursive-descend)).
+This is my realization of basic math problem: differentiation, tailor rows, tangent equations and even graphics. ~~Unfortunately, now my differentiator parses equations only full bracket sequences. But I'm looking forward to rewrite it using recursive descend ([you can check an example here](https://github.com/ThreadJava800/Recursive-descend))~~ DONE.
 
-My program generates a .tex file with all the transformations done on equation. To reduce amount of writing in pdf file, I also realized a function that replaces similar and big subtrees with letters.
+Here are the rules for syntax analysis:
+```
+G    = E '\0'
+E    = T{['+' |  '-']T}*
+T    = ST{['*' | '/']ST}*
+ST   = P{[^]P}*
+P    = '(' E ')' | X
+X    = ['a'-'z' | sin P | cos P | ln P] | N
+N    = ['0'-'9']+
+```
+
+My program also generates a .tex file with all the transformations done on equation. To reduce amount of writing in pdf file, I also realized a function that replaces similar and big subtrees with letters.
 
 Here are the list of functions that you can call (others are just technic):
 > DiffNode_t* openDiffFile(char* filenName, [optional]char* texName)
