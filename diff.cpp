@@ -48,10 +48,14 @@ bool isNodeInList(const DiffNode_t* node, DiffNode_t** replaced, const int* repl
 bool compareSubtrees(DiffNode_t* node1, DiffNode_t* node2) {
     if (!node1 || !node2) return false;
 
-    if (node1->type == node2->type) {
-        switch (node1->type) {
+    if (node1->type != node2->type) return false;
+
+    switch (node1->type) {
             case OP:
-                if (node1->value.opt == node2->value.opt) return true;
+                if (node1->value.opt == node2->value.opt) {
+                    if (node1->right && node2->right) return compareSubtrees(node1->right, node2->right);
+                    if (node2->left  && node2->left)  return compareSubtrees(node1->left,  node2->left);
+                }
                 break;
             case NUM:
                 if (compDouble(node1->value.num, node2->value.num)) return true;
@@ -62,13 +66,7 @@ bool compareSubtrees(DiffNode_t* node1, DiffNode_t* node2) {
             case NODET_DEFAULT:
             default:
                 break;
-        }
-        return false;
     }
-
-    if (node1->right && node2->right) compareSubtrees(node1->right, node2->right);
-    if (node2->left  && node2->left)  compareSubtrees(node1->left,  node2->left);
-
     return false;
 }
 
@@ -771,6 +769,13 @@ void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex) {
     if (getTreeDepth(node) < NEED_TEX_REPLACEMENT) return;
 
     if (getTreeDepth(node) == NEED_TEX_REPLACEMENT) {
+        for (int i = 0; i < *replacedIndex; i++) {
+            if (compareSubtrees(node, replaced[i])) {
+                node->texSymb = replaced[i]->texSymb;
+                return;
+            }
+        }
+
         replaced[*replacedIndex] = node;
         node->texSymb = (char) (65 + *replacedIndex);
         (*replacedIndex)++;
