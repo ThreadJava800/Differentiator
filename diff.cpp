@@ -107,10 +107,18 @@ DiffNode_t* getN(const char** s) {
     int val = 0;
     const char* oldS = *s;
 
+    bool isNeg = false;
+    if (**s == '-') {
+        isNeg = true;
+        (*s)++;
+    }
+
     while ('0' <= **s && '9' >= **s) {
         val = val * 10 + (**s - '0');
         (*s)++;
     }
+
+    if (isNeg) val *= -1;
 
     if(*s == oldS) return nullptr;
 

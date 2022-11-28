@@ -138,7 +138,11 @@ DiffNode_t* getN(const char** s);
 
 DiffNode_t* getSt(const char** s);
 
-DiffNode_t* parseEquation(const char* s);
+long int getFileSize(const char *fileAddress);
+
+char *readTextToBuffer(FILE *file, long int fileSize);
+
+DiffNode_t* parseEquation(const char** s);
 
 DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy);
 
