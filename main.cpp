@@ -8,7 +8,6 @@ int main() {
     drawGraph(res);
     equTangent(res, 2);
     equDiff(res);
-    // graphDump(res);
 
     diffNodeDtor(res);
 
