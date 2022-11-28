@@ -655,10 +655,19 @@ void anyTex(DiffNode_t* node, const char* oper, FILE* file) {
 void powTex(DiffNode_t* node, FILE* file) {
     if (!node || !file) return;
 
+    bool needLeftBracket  = LEFT(node)->texSymb == '\0'  && IS_OP(LEFT(node));
+    bool needRightBracket = RIGHT(node)->texSymb == '\0' && IS_OP(RIGHT(node));
+
     fprintf(file, "{");
+    if (needLeftBracket) fprintf(file, "(");
     printNodeReplaced(node->left, file);
+    if (needLeftBracket) fprintf(file, ")");
+
     fprintf(file, "}^{");
+
+    if (needRightBracket) fprintf(file, "(");
     printNodeReplaced(node->right, file);
+    if (needRightBracket) fprintf(file, ")");
     fprintf(file, "}");
 }
 
@@ -961,9 +970,9 @@ void drawGraph(DiffNode_t* node) {
     fprintf(file, "\nset terminal png size 960,720\nset output 'graph.png'\nplot f(x)\nexit\n");
     pclose(file);
 
-    fprintf(texFile, "\n\nГрафик функции ");
+    fprintf(texFile, "\\bigskip График функции ");
     diffToTex(node);
-    fprintf(texFile, ":\n\n");
+    fprintf(texFile, "имеет вид:\n\n");
     fprintf(texFile, "\\begin{figure}[h]"
                         "\\center{\\includegraphics[width=100mm]{graph.png}}"
                         "\\label{fig:t}"
