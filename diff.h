@@ -15,7 +15,7 @@ const double EPSILON = 1e-12;
 
 const int MAX_REPLACE_COUNT = 52;
 
-const int NEED_TEX_REPLACEMENT = 8;
+const int NEED_TEX_REPLACEMENT = 15;
 
 const char phrases[][MAX_WORD_LENGTH] = {
     "\\bigskip Совершенно очевидно, что\n\n",
@@ -113,6 +113,7 @@ DiffNode_t* newNodeOper(OpType_t oper, DiffNode_t* left, DiffNode_t* right);
 #define IS_MUL_OP(node) (node->value.opt == MUL_OP)
 #define IS_ADD_OP(node) node->value.opt == ADD_OP
 #define IS_POW_OP(node) (node->value.opt == POW_OP)
+#define IS_TRIG_LN(node) (node->value.opt == COS_OP || node->value.opt == SIN_OP || node->value.opt == LN_OP)
 
 #define ADD(node1, node2) newNodeOper(ADD_OP, node1,   node2)
 #define SUB(node1, node2) newNodeOper(SUB_OP, node1,   node2)
@@ -121,7 +122,7 @@ DiffNode_t* newNodeOper(OpType_t oper, DiffNode_t* left, DiffNode_t* right);
 #define POW(node1, node2) newNodeOper(POW_OP, node1,   node2)
 #define COS(node)         newNodeOper(COS_OP, nullptr, node)
 #define SIN(node)         newNodeOper(SIN_OP, nullptr, node)
-#define LN(node)         newNodeOper(LN_OP,  nullptr, node)
+#define LN(node)          newNodeOper(LN_OP,  nullptr, node)
 
 #define SET_MUL_OP(node) {     \
     node->type      = OP;       \

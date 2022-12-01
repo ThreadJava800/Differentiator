@@ -8,31 +8,37 @@
 \usepackage[T1,T2A]{fontenc}
 \usepackage[russian]{babel}
 \begin{document}
-Дано: $\frac{{x}^{5} + 2}{x - 1}$
+Дано: ${cos(5 \cdot {x}^{3})}^{2} \cdot sin(3x)$\bigskip График функции ${cos(5 \cdot {x}^{3})}^{2} \cdot sin(3x)$имеет вид:
 
-\bigskip Ну что? Тейлора тебе дать?
+\begin{figure}[h]\center{\includegraphics[width=100mm]{graph.png}}\label{fig:t}\end{figure}\bigskip Взял с первой страницы в гугле:
 
-$122.5 + \frac{141.25}{1} \cdot {(x-3)}^{1} + \frac{128.75}{2} \cdot {(x-3)}^{2} + \frac{76.875}{6} \cdot {(x-3)}^{3} + \frac{26.25}{24} \cdot {(x-3)}^{4} + \frac{-5.625}{120} \cdot {(x-3)}^{5} + \frac{16.875}{720} \cdot {(x-3)}^{6} + \frac{-59.0625}{5040} \cdot {(x-3)}^{7} + \overline{\overline{o}}({x}^{7}) $
-
-\bigskip График функции $\frac{{x}^{5} + 2}{x - 1}$имеет вид:
-
-\begin{figure}[h]\center{\includegraphics[width=100mm]{graph.png}}\label{fig:t}\end{figure}\bigskip Иииииииииииииии если:
-
-$(x - 1)'$ = $1 - 0$
+$(3x)'$ = $0x + 3 \cdot 1$
 
 \bigskip Любому советскому первокласснику очевидно, что
 
-$({x}^{5})'$ = $1 \cdot 5 \cdot {x}^{4}$
+$(sin(3x))'$ = $cos(3x) \cdot (0x + 3 \cdot 1)$
 
-\bigskip Segmentation fault (core dumped)
+\bigskip По теореме Дашкова-Гущина:
 
-$({x}^{5} + 2)'$ = $1 \cdot 5 \cdot {x}^{4} + 0$
+$({x}^{3})'$ = $1 \cdot 3 \cdot {x}^{2}$
 
-\bigskip Очередное халявное преобразование:
+\bigskip Заметим, что
 
-$(\frac{{x}^{5} + 2}{x - 1})'$ = $\frac{(1 \cdot 5 \cdot {x}^{4} + 0) \cdot (x - 1) - ({x}^{5} + 2) \cdot (1 - 0)}{(x - 1) \cdot (x - 1)}$
+$(5 \cdot {x}^{3})'$ = $0 \cdot {x}^{3} + 5 \cdot 1 \cdot 3 \cdot {x}^{2}$
+
+\bigskip Любому советскому первокласснику очевидно, что
+
+$(cos(5 \cdot {x}^{3}))'$ = $-1 \cdot sin(5 \cdot {x}^{3}) \cdot (0 \cdot {x}^{3} + 5 \cdot 1 \cdot 3 \cdot {x}^{2})$
+
+\bigskip Я бы давно бы вас убил за это количество переменных А, ещё на стадии двух переменных А!
+
+$({cos(5 \cdot {x}^{3})}^{2})'$ = $-1 \cdot sin(5 \cdot {x}^{3}) \cdot (0 \cdot {x}^{3} + 5 \cdot 1 \cdot 3 \cdot {x}^{2}) \cdot 2 \cdot {cos(5 \cdot {x}^{3})}^{1}$
+
+\bigskip Я бы давно бы вас убил за это количество переменных А, ещё на стадии двух переменных А!
+
+$({cos(5 \cdot {x}^{3})}^{2} \cdot sin(3x))'$ = $-1 \cdot sin(5 \cdot {x}^{3}) \cdot (0 \cdot {x}^{3} + 5 \cdot 1 \cdot 3 \cdot {x}^{2}) \cdot 2 \cdot {cos(5 \cdot {x}^{3})}^{1} \cdot sin(3x) + {cos(5 \cdot {x}^{3})}^{2} \cdot cos(3x) \cdot (0x + 3 \cdot 1)$
 
 \bigskip После очевидных упрощений имеем:
 
-$\frac{5 \cdot {x}^{4} \cdot (x - 1) - {x}^{5} + 2}{(x - 1) \cdot (x - 1)}$
+$-1 \cdot sin(5 \cdot {x}^{3}) \cdot 5 \cdot 3 \cdot {x}^{2} \cdot 2 \cdot cos(5 \cdot {x}^{3}) \cdot sin(3x) + {cos(5 \cdot {x}^{3})}^{2} \cdot cos(3x) \cdot 3$
 \end{document}

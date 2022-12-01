@@ -2,7 +2,6 @@
 
 FILE* texFile = nullptr;
 int   onClose = atexit(closeLogfile);
-const char* S = nullptr;
 
 DiffNode_t* newNodeOper(OpType_t oper, DiffNode_t* left, DiffNode_t* right) {
     if (!right) return nullptr;
@@ -264,9 +263,12 @@ DiffNode_t* getE(const char** s) {
 DiffNode_t* getG(const char** s) {
     if (!s || !(*s)) return nullptr;
 
+    const char* start = *s;
     DiffNode_t* node = getE(s);
-    S = *s;
-    if (**s != '\0') return nullptr;
+    if (**s != '\0') {
+        fprintf(stderr, "Syntax error: (pos=%ld) %s\n", *s - start, *s);
+        return nullptr;
+    }
 
     return node;
 }
@@ -688,7 +690,7 @@ void nodeToTex(DiffNode_t* node, FILE *file) {
 bool isMulSubtree(DiffNode_t* node) {
     if (!node) return false;
 
-    if (!IS_MUL_OP(node) && !IS_POW_OP(node) && !IS_NUM(node) && !IS_VAR(node)) return false;
+    if (!IS_MUL_OP(node) && !IS_POW_OP(node) && !IS_TRIG_LN(node) && !IS_NUM(node) && !IS_VAR(node)) return false;
     if (L(node)) return isMulSubtree(L(node));
     if (R(node)) return isMulSubtree(R(node));
 
