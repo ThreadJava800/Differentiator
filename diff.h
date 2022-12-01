@@ -97,9 +97,9 @@ DiffNode_t* newNodeOper(OpType_t oper, DiffNode_t* left, DiffNode_t* right);
 #define RR(node) R(R(node))
 #define LL(node) L(L(node))
 
-#define dL nodeDiff(L(startNode), texFile)
+#define dL nodeDiff(L(startNode), file)
 #define cL nodeCopy(L(startNode))
-#define dR nodeDiff(R(startNode), texFile)
+#define dR nodeDiff(R(startNode), file)
 #define cR nodeCopy(R(startNode))
 
 #define IS_OP(node)  node->type == OP

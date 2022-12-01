@@ -456,14 +456,20 @@ DiffNode_t* diffPow(DiffNode_t* startNode, FILE* file) {
     DiffNode_t* result = nullptr;
 
     if ((IS_OP(L(startNode)) || IS_VAR(L(startNode))) && IS_NUM(R(startNode))) {
+
         double powVal = R(startNode)->value.num--;
         result = MUL(MUL(dL, newNumNode(nullptr, nullptr, nullptr, powVal)), POW(cL, cR));
+
     } else if ((IS_VAR(L(startNode)) || IS_OP(L(startNode))) && (IS_VAR(R(startNode)) || IS_OP(R(startNode)))) {
+
         DiffNode_t* diffPart = MUL(LN(L(startNode)), cL);
-        result = MUL(nodeCopy(startNode), nodeDiff(diffPart, texFile));
+        result = MUL(nodeCopy(startNode), nodeDiff(diffPart, file));
         diffNodeDtor(diffPart);
+
     } else if (IS_NUM(L(startNode)) && (IS_OP(R(startNode)) || IS_VAR(R(startNode)))) {
+
         result = MUL(nodeCopy(startNode), LN(L(startNode)));
+
     } else if (IS_NUM(L(startNode)) && IS_NUM(R(startNode))) {
         free(L(startNode));
         free(R(startNode));
@@ -490,35 +496,42 @@ DiffNode_t* nodeDiff(DiffNode_t* node, FILE* file) {
     } else {
         switch(startNode->value.opt) {
             case ADD_OP:
-                return ADD(dL, dR);
+                startNode = ADD(dL, dR);
+                break;
             case SUB_OP:
-                return SUB(dL, dR);
+                startNode = SUB(dL, dR);
+                break;
             case MUL_OP:
-                return ADD(MUL(dL, cR), MUL(cL, dR));
+                startNode = ADD(MUL(dL, cR), MUL(cL, dR));
+                break;
             case DIV_OP:
-                return DIV(SUB(MUL(dL, cR), MUL(cL, dR)), MUL(cR, cR));
+                startNode = DIV(SUB(MUL(dL, cR), MUL(cL, dR)), MUL(cR, cR));
+                break;
             case POW_OP:
-                return diffPow(startNode, file);
+                startNode = diffPow(startNode, file);
+                break;
             case SIN_OP:
-                return MUL(COS(cR), dR);
+                startNode = MUL(COS(cR), dR);
+                break;
             case COS_OP:
-                return MUL(MUL(newNumNode(nullptr, nullptr, nullptr, -1), SIN(cR)), dR);
+                startNode = MUL(MUL(newNumNode(nullptr, nullptr, nullptr, -1), SIN(cR)), dR);
+                break;
             case LN_OP:
-                return DIV(dR, cR);
+                startNode = DIV(dR, cR);
+                break;
             case OPT_DEFAULT:
             default:
                 break;
         }
     }
-    // if (file) {
-    //     printRandomPhrase(file);
-    //     printLineToTex(file, "$(");
-    //     nodeToTex(startNode, file);
-    //     printLineToTex(file, ")'$ = ");
-    //     diffToTex(node);
-    //     printLineToTex(file, "\n\n");
-    //     diffNodeDtor(startNode);
-    // }
+    if (file) {
+        printRandomPhrase(file);
+        printLineToTex(file, "$(");
+        nodeToTex(node, file);
+        printLineToTex(file, ")'$ = ");
+        diffToTex(startNode);
+        printLineToTex(file, "\n\n");
+    }
     return startNode;
 }
 
@@ -531,9 +544,6 @@ int equDiff(DiffNode_t* start) {
     fprintf(texFile, "\\bigskip После очевидных упрощений имеем:\n\n");
     easierEqu(res);
     diffToTex(res);
-
-    printf("%p ", res);
-    graphDump(res);
 
     return DIFF_OK;
 }
@@ -825,19 +835,25 @@ double funcValue(DiffNode_t* node, double x) {
 
 }
 
-void tailor(DiffNode_t* node, int POW_OP, double x0) {
-    if (!node || POW_OP <= 0) return;
+void tailor(DiffNode_t* node, int pow, double x0) {
+    if (!node || pow <= 0) return;
 
-    DiffNode_t* tailorCopy = nodeCopy(node);
+    double funcVal = funcValue(node, x0);
+    fprintf(texFile, "\n\n\\bigskip Ну что? Тейлора тебе дать?\n\n$");
+    if (!compDouble(funcVal, 0)) fprintf(texFile, "%lg + ", funcVal);
+    DiffNode_t* diffed = node;
 
-    fprintf(texFile, "\\bigskip Ну что? Тейлора тебе дать?\n\n$%.2lf + ", funcValue(tailorCopy, x0));
-    for (int i = 1; i < POW_OP; i++) {
-        nodeDiff(tailorCopy, nullptr);
-        fprintf(texFile, "\\frac{%.2lf}{%lu} * {(x-%.2lf)}^{%d} + ", funcValue(tailorCopy, x0), factorial(i), x0, i);
+    for (int i = 1; i <= pow; i++) {
+        diffed = nodeDiff(diffed, nullptr);
+        graphDump(diffed);
+        // easierEqu(diffed);
+        funcVal = funcValue(diffed, x0);
+        if (!compDouble(funcVal, 0)) {
+            if (!compDouble(x0, 0)) fprintf(texFile, "\\frac{%lg}{%lu} * {(x-%lg)}^{%d} + ", funcVal, factorial(i), x0, i);
+            else fprintf(texFile, "\\frac{%lg}{%lu} * {x}^{%d} + ", funcVal, factorial(i), i);
+        }
     }
-    fprintf(texFile, "\\overline{\\overline{o}}({x}^{%d}) $\n\n", POW_OP);
-
-    diffNodeDtor(tailorCopy);
+    fprintf(texFile, "\\overline{\\overline{o}}({x}^{%d}) $\n\n", pow);
 }
 
 void printPlotOper(DiffNode_t* node, const char* oper, FILE* file) {
