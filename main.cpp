@@ -3,11 +3,11 @@
 #include "diff.h"
 
 int main() {
-    DiffNode_t* res = openDiffFile("test.txt");
-    // tailor(res, 7, 3);
+    DiffNode_t* res = openDiffFile("hardExample.txt");
+
+    tailor(res, 3, 0);
     drawGraph(res);
-    // equTangent(res, 0);
-    // graphDump(res);
+    equTangent(res, 0);
     equDiff(res);
 
     diffNodeDtor(res);

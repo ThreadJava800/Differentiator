@@ -15,7 +15,7 @@ const double EPSILON = 1e-12;
 
 const int MAX_REPLACE_COUNT = 52;
 
-const int NEED_TEX_REPLACEMENT = 15;
+const int NEED_TEX_REPLACEMENT = 10;
 
 const char phrases[][MAX_WORD_LENGTH] = {
     "\\bigskip Совершенно очевидно, что\n\n",

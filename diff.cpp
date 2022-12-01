@@ -603,8 +603,10 @@ void anyTex(DiffNode_t* node, const char* oper, FILE* file) {
 void powTex(DiffNode_t* node, FILE* file) {
     if (!node || !file) return;
 
-    bool needLeftBracket  = L(node)->texSymb == '\0'  && IS_OP(L(node)) && !isMulSubtree(L(node));
-    bool needRightBracket = R(node)->texSymb == '\0'  && IS_OP(R(node)) && !isMulSubtree(R(node));
+    bool needLeftBracket  = L(node)->texSymb == '\0'  && IS_OP(L(node))
+                        && (!isMulSubtree(L(node)) || IS_TRIG_LN(L(node)) || !IS_POW_OP(L(node))) ;
+    bool needRightBracket = R(node)->texSymb == '\0'  && IS_OP(R(node)) 
+                        && (!isMulSubtree(R(node)) || IS_TRIG_LN(R(node)) || !IS_POW_OP(R(node)));
 
     fprintf(file, "{");
     if (needLeftBracket) fprintf(file, "(");
@@ -784,7 +786,8 @@ void initTex(FILE* file) {
     fprintf(texFile, "\\usepackage[utf8]{inputenc}\n");
     fprintf(texFile, "\\usepackage[T1,T2A]{fontenc}\n");
     fprintf(texFile, "\\usepackage[russian]{babel}\n");
-    fprintf(texFile, "\\begin{document}\n");
+    fprintf(texFile, "\\usepackage{minibox}\n");
+    fprintf(texFile, "\\begin{document}\n\\center\n");
 }
 
 void printLineToTex(FILE*file, const char* string) {
@@ -851,7 +854,7 @@ void tailor(DiffNode_t* node, int pow, double x0) {
     if (!node || pow <= 0) return;
 
     double funcVal = funcValue(node, x0);
-    fprintf(texFile, "\n\n\\bigskip Ну что? Тейлора тебе дать?\n\n$");
+    fprintf(texFile, "\n\n\\bigskip Ну что? Тейлора тебе дать?\n\n\\minibox[frame]{$");
     if (!compDouble(funcVal, 0)) fprintf(texFile, "%lg + ", funcVal);
     DiffNode_t* diffed = node;
 
@@ -863,7 +866,7 @@ void tailor(DiffNode_t* node, int pow, double x0) {
             else fprintf(texFile, "\\frac{%lg}{%lu} \\cdot {x}^{%d} + ", funcVal, factorial(i), i);
         }
     }
-    fprintf(texFile, "\\overline{\\overline{o}}({x}^{%d}) $\n\n", pow);
+    fprintf(texFile, "\\overline{\\overline{o}}({x}^{%d})$}\n\n", pow);
 }
 
 void printPlotOper(DiffNode_t* node, const char* oper, FILE* file) {
@@ -892,7 +895,7 @@ void drawNode(DiffNode_t* node, FILE* file) {
     if (!node || !file) return;
 
     if (node->type == NUM) {
-        fprintf(file, "%.2lf", node->value.num);
+        fprintf(file, "%lg", node->value.num);
     } else if (node->type == VAR) {
         fprintf(file, "%c", node->value.var);
     } else {
@@ -955,8 +958,8 @@ void equTangent(DiffNode_t* node, double x0) {
     nodeDiff(tangent, nullptr);
     double k = funcValue(tangent, x0);
     double b = funcValue(node, x0) - k * x0;
-    fprintf(texFile, "Уравнение касательной в точке x=%.2lf имеет вид:\n\n", x0);
-    fprintf(texFile, "y = %.2lfx + %.2lf:\n\n", k, b);
+    fprintf(texFile, "\n\n \\minibox[frame]{\\centerline{Уравнение касательной в точке x=%lg имеет вид:}\\\\\n", x0);
+    fprintf(texFile, "\\centerline{y = %lgx + %lg}}\n\n", k, b);
 
     diffNodeDtor(tangent);
 }
@@ -1002,7 +1005,7 @@ void printNodeVal(DiffNode_t* node, FILE* file) {
             };
             break;
         case NUM:
-            fprintf(file, "%.2lf", node->value.num);
+            fprintf(file, "%lg", node->value.num);
             break;
         case VAR:
             fprintf(file, "%c",  node->value.var);
