@@ -450,133 +450,6 @@ void easierEqu(DiffNode_t* start) {
 
 // DIFF SECTION
 
-void diffMul(DiffNode_t* node, FILE* file) {
-    if (!node) return;
-
-    DiffNode_t* interimNode1 = diffNodeCtor(nullptr, nullptr, nullptr);
-    DiffNode_t* interimNode2 = diffNodeCtor(nullptr, nullptr, nullptr);
-    if (!interimNode1 || !interimNode2) return;
-
-    interimNode1->type = interimNode2->type = OP;
-    interimNode1->value.opt  = interimNode2->value.opt  = MUL_OP;
-    interimNode1->prev = interimNode2->prev = node;
-
-    interimNode1->right = nodeCopy(node->right);
-    DiffNode_t* leftNotDiffed = nodeCopy(node->left);
-    nodeDiff(node->left, file);
-    interimNode1->left = node->left;
-
-    interimNode2->left = leftNotDiffed;
-    nodeDiff(node->right, file);
-    interimNode2->right = node->right;
-
-    node->value.opt = ADD_OP;
-    node->left  = interimNode1;
-    node->right = interimNode2;
-}
-
-void diffDiv(DiffNode_t* node, FILE* file) {
-    if (!node) return;
-
-    DiffNode_t* interimNode1 = diffNodeCtor(nullptr, nullptr, node->prev);
-    DiffNode_t* interimNode2 = diffNodeCtor(nullptr, nullptr, node->prev);
-    DiffNode_t* subNode      = diffNodeCtor(nullptr, nullptr, node->prev);
-    DiffNode_t* powNode      = diffNodeCtor(nullptr, nullptr, node->prev);
-    if (!interimNode1 || !interimNode2 || !subNode || !powNode) return;
-
-    interimNode1->type = interimNode2->type = powNode->type = subNode->type = OP;
-    interimNode1->value.opt  = interimNode2->value.opt  = MUL_OP;
-    powNode->value.opt                                  = POW_OP;
-    subNode->value.opt                                  = SUB_OP;
-
-    DiffNode_t* numerator   = nodeCopy(node->left);
-    DiffNode_t* denominator = nodeCopy(node->right);
-    powNode->left           = nodeCopy(node->right);
-    powNode->right          = diffNodeCtor(nullptr, nullptr, node->prev);
-    powNode->right->type    = NUM;
-    powNode->right->value.num     = 2;
-
-    nodeDiff(node->left, file);
-    interimNode1->left  = node->left;
-    interimNode1->right = denominator;
-
-    nodeDiff(node->right, file);
-    interimNode2->left  = numerator;
-    interimNode2->right = node->right;
-
-    subNode->left  = interimNode1;
-    subNode->right = interimNode2;
-
-    node->value.opt = DIV_OP;
-    node->left  = subNode;
-    node->right = powNode;
-}
-
-void diffVarPowVal(DiffNode_t* node, FILE* file) {
-    if (!node) return;
-
-    DiffNode_t* leftCopy  = nodeCopy(node->left);
-    DiffNode_t* rightCopy = nodeCopy(node->right);
-    DiffNode_t* rightNode = diffNodeCtor(nullptr, nullptr, node->prev);
-    rightNode->type = OP;
-    rightNode->value.opt  = MUL_OP;
-
-    nodeDiff(node->left, file);
-
-    rightNode->type = OP;
-    rightNode->value.opt  = POW_OP;
-    L(rightNode) = leftCopy;
-
-    R(rightNode)       = diffNodeCtor(nullptr, nullptr, node->prev);
-    R(rightNode)->type = OP;
-    R(rightNode)->value.opt  = SUB_OP;
-
-    L(R(rightNode)) = nodeCopy(node->right);
-    R(R(rightNode)) = diffNodeCtor(nullptr, nullptr, node->prev);
-    R(R(rightNode))->type = NUM;
-    R(R(rightNode))->value.num  = 1;
-
-    DiffNode_t* mulLeftNode = diffNodeCtor(nullptr, nullptr, node->prev);
-    mulLeftNode->right = rightNode;
-    mulLeftNode->left  = rightCopy;
-
-    node->value.opt  = MUL_OP;
-    node->right = mulLeftNode;
-}
-
-void diffVarPowVar(DiffNode_t* node, FILE* file) {
-    if (!node) return;
-
-    DiffNode_t* rootCopy = nodeCopy(node);
-    node->left = nodeCopy(node);
-    node->value.opt = MUL_OP;
-
-    DiffNode_t* rightNode = diffNodeCtor(nullptr, nullptr, nullptr);
-    DiffNode_t* lnNode    = diffNodeCtor(nullptr, nullptr, nullptr);
-
-    lnNode->type = OP;
-    lnNode->value.opt = LN_OP;
-
-    L(lnNode) = diffNodeCtor(nullptr, nullptr, nullptr);
-    L(lnNode)->type = NUM;
-    L(lnNode)->value.num = 0;
-    R(lnNode) = L(rootCopy);
-
-    L(rightNode) = R(rootCopy);
-    R(rightNode) = lnNode;
-
-    nodeDiff(rightNode, file);
-    node->right = rightNode;
-}
-
-void diffValPowVar(DiffNode_t* node, FILE* file) {
-    if (!node) return;
-
-    node->value.opt = MUL_OP;
-    nodeDiff(node->right, file);
-    node->left->value.num = log(node->left->value.num);
-}
-
 DiffNode_t* diffPow(DiffNode_t* startNode, FILE* file) {
     if (!startNode) return nullptr;
 
@@ -590,13 +463,14 @@ DiffNode_t* diffPow(DiffNode_t* startNode, FILE* file) {
         result = MUL(nodeCopy(startNode), nodeDiff(diffPart, texFile));
         diffNodeDtor(diffPart);
     } else if (IS_NUM(L(startNode)) && (IS_OP(R(startNode)) || IS_VAR(R(startNode)))) {
-        // diffValPowVar(startNode, file);
+        result = MUL(nodeCopy(startNode), LN(L(startNode)));
     } else if (IS_NUM(L(startNode)) && IS_NUM(R(startNode))) {
-        // free(L(startNode));
-        // free(R(startNode));
-        // startNode->type = NUM;
-        // startNode->value.num  = 0;
-        // L(startNode) = R(startNode) = nullptr;
+        free(L(startNode));
+        free(R(startNode));
+        startNode->type = NUM;
+        startNode->value.num  = 0;
+        L(startNode) = R(startNode) = nullptr;
+        return startNode;
     }
     return result;
 }

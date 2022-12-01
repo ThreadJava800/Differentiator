@@ -204,16 +204,6 @@ void easierEqu(DiffNode_t* start);
 
 // ALL FOR DIFF
 
-void diffMul(DiffNode_t* node, FILE* file);
-
-void diffDiv(DiffNode_t* node, FILE* file);
-
-void diffVarPowVal(DiffNode_t* node, FILE* file);
-
-void diffVarPowVar(DiffNode_t* node, FILE* file);
-
-void diffValPowVar(DiffNode_t* node, FILE* file);
-
 DiffNode_t* diffPow(DiffNode_t* startNode, FILE* file);
 
 DiffNode_t* nodeDiff(DiffNode_t* startNode, FILE* file);
