@@ -3,7 +3,7 @@
 #include "diff.h"
 
 int main() {
-    DiffNode_t* res = openDiffFile("hardExample.txt");
+    DiffNode_t* res = openDiffFile("test.txt");
 
     tailor(res, 3, 0);
     drawGraph(res);

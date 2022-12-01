@@ -801,7 +801,34 @@ void initTex(FILE* file) {
     fprintf(texFile, "\\usepackage[T1,T2A]{fontenc}\n");
     fprintf(texFile, "\\usepackage[russian]{babel}\n");
     fprintf(texFile, "\\usepackage{minibox}\n");
-    fprintf(texFile, "\\begin{document}\n\\center\n");
+
+    fprintf(texFile, "\\title{[АНТИЗОРИЧ]\\\\ Введение в математический анализ. Непрерывность, пределы, дифферинцируемость}\n"
+                     "\\author{Владимир Антонович Зорич}\n"
+                     "\\date{Декабрь 1985 год}\n");
+
+    fprintf(texFile, "\\begin{document}\n\\maketitle\n\\sloppy\n");
+    fprintf(texFile, "\\texttt{Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore "
+    "et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex "
+    "ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur." 
+    "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\\newline"
+    "\\hspace*{\\parindent}От своего имени и от имени будущих читателей я благодарю всех, кто "
+    "нашел возможность, живя в разных странах, сообщить в издательство "
+    "или мне лично о погрешностях (опечатках, ошибках, пропусках), заме"
+    "ченных в русском, английском, немецком или китайском изданиях этого "
+    "учебника. Замечания учтены и соответствующая правка внесена в текст "
+    "предлагаемого шестого русского издания.\\newline"
+    "\\hspace*{\\parindent}Как выяснилось, книга пригодилась и физикам — очень этому рад."
+    "Во всяком случае я действительно стремился сопровождать формаль"
+    "ную теорию содержательными примерами ее применения как внутри "
+    "математики, так и вне нее.\\newline"
+    "\\hspace*{\\parindent} Шестое издание содержит ряд дополнений, которые, возможно, бу-"
+    "дут полезны студентам и преподавателям. Во-первых, это некоторые "
+    "материалы реальных лекций (например записи двух вводных обзорных "
+    "лекций первого и третьего семестров) и, во-вторых, это математические "
+    "сведения (порой актуальные, например связь многомерной геометрии и "
+    "теории вероятностей), примыкающие к основному предмету учебника.\\newline"
+    "Москва, 2011 год В. Зорич"
+    "}\n\\clearpage\n\\center");
 }
 
 void printLineToTex(FILE*file, const char* string) {
@@ -1084,6 +1111,6 @@ void closeLogfile(void) {
         fprintf(texFile, "\n\\end{document}");
         fclose(texFile);
 
-        system("pdflatex zorich.tex > /dev/null && xdg-open zorich.pdf");
+        system("pdflatex zorich.tex > /dev/null 2>&1 && xdg-open zorich.pdf");
     }
 }
