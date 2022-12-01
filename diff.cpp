@@ -122,17 +122,31 @@ DiffNode_t* setOper(DiffNode_t* val1, DiffNode_t* val2, OpType_t oper) {
 DiffNode_t* getN(const char** s) {
     if (!s || !(*s)) return nullptr;
 
-    int val = 0;
+    double val = 0;
+    int pointCount = 0, fracNumsCount = 1;
     const char* oldS = *s;
 
+    bool hasFract = false;
     bool isNeg = false;
     if (**s == '-') {
         isNeg = true;
         (*s)++;
     }
 
-    while ('0' <= **s && '9' >= **s) {
-        val = val * 10 + (**s - '0');
+    while (('0' <= **s && '9' >= **s) || **s == '.') {
+        if (pointCount >= 2) {
+            fprintf(stderr, "Incorrect number format.\n");
+            return nullptr;
+        }
+        if (**s == '.') {
+            hasFract = true;
+            pointCount++;
+        } else if (hasFract) {
+            val += (**s - '0') / (pow(10, fracNumsCount++));
+        }else {
+            val = val * 10 + (**s - '0');
+        }
+
         (*s)++;
     }
 

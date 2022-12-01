@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2022.11.25)  1 DEC 2022 23:18
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2022.11.25)  1 DEC 2022 23:37
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -517,29 +517,26 @@ Overfull \hbox (6.8pt too wide) in paragraph at lines 24--25
 [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./graph.png>]
-(./zorich.aux)
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
- ) 
+(./zorich.aux) ) 
 Here is how much of TeX's memory you used:
  4535 strings out of 479721
  66961 string characters out of 5887696
- 363681 words of memory out of 5000000
+ 363688 words of memory out of 5000000
  22454 multiletter control sequences out of 15000+600000
  472518 words of font info for 38 fonts, out of 8000000 for 9000
  430 hyphenation exceptions out of 8191
  55i,10n,63p,223b,270s stack positions out of 5000i,500n,10000p,200000b,80000s
- </home/vladimir/.texlive2021/texmf-var/fonts/pk/ljfour/lh/lh-t2a/larm1000.60
-0pk></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></
-usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/sha
-re/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texli
-ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/tex
-mf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb>
-Output written on zorich.pdf (1 page, 58637 bytes).
+ </home/vladimir/.texlive2021/texmf-var/fonts/pk/ljfour/lh/lh-t
+2a/larm1000.600pk></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm
+/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7
+.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></
+usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/shar
+e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texl
+ive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb>
+Output written on zorich.pdf (1 page, 72038 bytes).
 PDF statistics:
- 81 PDF objects out of 1000 (max. 8388607)
- 23 compressed objects within 1 object stream
+ 98 PDF objects out of 1000 (max. 8388607)
+ 26 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  6 words of extra memory for PDF output out of 10000 (max. 10000000)
 
