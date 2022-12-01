@@ -2,11 +2,20 @@
 
 #include "diff.h"
 
+extern const char* S;
+
 int main() {
+    // Syntax error handler
+
+    // функция предсказывающая длину распечатки с учетом опретора фрак и степени
     DiffNode_t* res = openDiffFile("test.txt");
-    // tailor(res, 6, 0);
-    drawGraph(res);
-    equTangent(res, 2);
+    if (!res) {
+        printf("Syntax error: %s\n", S);
+    }
+    // tailor(res, 3, 0);
+    // drawGraph(res);
+    // equTangent(res, 0);
+    // graphDump(res);
     equDiff(res);
 
     diffNodeDtor(res);

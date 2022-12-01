@@ -15,7 +15,7 @@ const double EPSILON = 1e-12;
 
 const int MAX_REPLACE_COUNT = 52;
 
-const int NEED_TEX_REPLACEMENT = 4;
+const int NEED_TEX_REPLACEMENT = 8;
 
 const char phrases[][MAX_WORD_LENGTH] = {
     "\\bigskip Совершенно очевидно, что\n\n",
@@ -26,6 +26,21 @@ const char phrases[][MAX_WORD_LENGTH] = {
     "\\bigskip Иииииииииииииии если:\n\n",
     "\\bigskip Ничего не понял, но очень интересно:\n\n",
     "\\bigskip Любому советскому первокласснику очевидно, что\n\n",
+    "\\bigskip Ну, а это вообще не должно вызывать вопросов:\n\n",
+    "\\bigskip По теореме Дашкова-Гущина:\n\n",
+    "\\bigskip Однажды Хемингуэй поспорил, что сможет написать самый трогательный рассказ:\n\n",
+    "\\bigskip Ну а это вообще база:\n\n",
+    "\\bigskip Я бы давно бы вас убил за это количество переменных А, ещё на стадии двух переменных А!\n\n",
+    "\\bigskip KERNEL PANIC - NOT SYNCING!\n\n",
+    "\\bigskip Segmentation fault (core dumped)\n\n",
+    "\\bigskip Я не знаю почему это так, но это факт:\n\n",
+    "\\bigskip Если аксиомы не противоречивы, то\n\n",
+    "\\bigskip Если Земля плоская, то очевидно:\n\n",
+    "\\bigskip (HONORABLE MENTION)\n\n",
+    "\\bigskip Взял с первой страницы в гугле:\n\n",
+    "\\bigskip Ну вот! 14 стадий, и матан выучен!\n\n",
+    "\\bigskip Даже сишнику очевидно\n\n",
+    "\\bigskip Даже физтеху очевидно\n\n",
 };
 
 enum DiffError_t {
@@ -44,14 +59,14 @@ enum NodeType_t {
 };
 
 enum OpType_t {
-    MUL         =  0,
-    ADD         =  1,
-    DIV         =  2,
-    SUB         =  3,
-    POW         =  4,
-    SIN         =  5,
-    COS         =  6,
-    LN          =  7,
+    MUL_OP         =  0,
+    ADD_OP         =  1,
+    DIV_OP         =  2,
+    SUB_OP         =  3,
+    POW_OP         =  4,
+    SIN_OP            =  5,
+    COS_OP         =  6,
+    LN_OP          =  7,
     OPT_DEFAULT = -1,
 };
 
@@ -72,23 +87,50 @@ struct DiffNode_t {
     char texSymb = '\0';
 };
 
-#define LEFT(node)  node->left
-#define RIGHT(node) node->right
+// FOR DSL
+
+DiffNode_t* newNodeOper(OpType_t oper, DiffNode_t* left, DiffNode_t* right);
+
+#define L(node)    node->left
+#define R(node)    node->right
+#define OPER(node) node->value.opt
+#define RR(node) R(R(node))
+#define LL(node) L(L(node))
+
+#define dL nodeDiff(L(startNode), texFile)
+#define cL nodeCopy(L(startNode))
+#define dR nodeDiff(R(startNode), texFile)
+#define cR nodeCopy(R(startNode))
 
 #define IS_OP(node)  node->type == OP
 #define IS_NUM(node) node->type == NUM
 #define IS_VAR(node) node->type == VAR
 
-#define IS_COS(node) node->value.opt == COS
-#define IS_SIN(node) node->value.opt == SIN
-#define IS_LN(node) node->value.opt == LN
-#define IS_DIV(node) node->value.opt == DIV
-#define IS_MUL(node) node->value.opt == MUL
-#define IS_ADD(node) node->value.opt == ADD
-#define IS_POW(node) node->value.opt == POW
+#define IS_COS_OP(node) node->value.opt == COS_OP
+#define IS_SIN_OP(node) node->value.opt == SIN_OP
+#define IS_LN_OP(node) node->value.opt == LN_OP
+#define IS_DIV(node) node->value.opt == DIV_OP
+#define IS_MUL_OP(node) node->value.opt == MUL_OP
+#define IS_ADD_OP(node) node->value.opt == ADD_OP
+#define IS_POW_OP(node) node->value.opt == POW_OP
 
-#define RIGHT_VAR_LEFT_NUM(node) (IS_NUM(LEFT(node))  &&  IS_VAR(RIGHT(node)))
-#define LEFT_VAR_RIGHT_NUM(node) (IS_NUM(RIGHT(node)) &&  IS_VAR(LEFT(node)))
+#define ADD(node1, node2) newNodeOper(ADD_OP, node1,   node2)
+#define SUB(node1, node2) newNodeOper(SUB_OP, node1,   node2)
+#define MUL(node1, node2) newNodeOper(MUL_OP, node1,   node2)
+#define DIV(node1, node2) newNodeOper(DIV_OP, node1,   node2)
+#define POW(node1, node2) newNodeOper(POW_OP, node1,   node2)
+#define COS(node)         newNodeOper(COS_OP, nullptr, node)
+#define SIN(node)         newNodeOper(SIN_OP, nullptr, node)
+#define LN(node)         newNodeOper(LN_OP,  nullptr, node)
+
+#define SET_MUL_OP(node) {     \
+    node->type      = OP;       \
+    node->value.opt = MUL_OP;    \
+    node->prev      = node;       \
+}
+
+#define R_VAR_L_NUM(node) (IS_NUM(L(node))  &&  IS_VAR(R(node)))
+#define L_VAR_R_NUM(node) (IS_NUM(R(node)) &&  IS_VAR(L(node)))
 
 #define SKIP_SPACES() {      \
     while (symb == ' ') {     \
@@ -103,6 +145,8 @@ struct DiffNode_t {
 }                                               \
 
 DiffNode_t* diffNodeCtor(DiffNode_t* left, DiffNode_t* right, DiffNode_t* prev, int* err = nullptr);
+
+DiffNode_t* newNumNode(DiffNode_t* left, DiffNode_t* right, DiffNode_t* prev, double value);
 
 bool compDouble(const double value1, const double value2);
 
@@ -170,15 +214,9 @@ void diffVarPowVar(DiffNode_t* node, FILE* file);
 
 void diffValPowVar(DiffNode_t* node, FILE* file);
 
-void diffPow(DiffNode_t* node, FILE* file);
+DiffNode_t* diffPow(DiffNode_t* startNode, FILE* file);
 
-void diffCos(DiffNode_t* node, FILE* file);
-
-void diffSin(DiffNode_t* node, FILE* file);
-
-void diffLn(DiffNode_t* node, FILE* file);
-
-void nodeDiff(DiffNode_t* node, FILE* file);
+DiffNode_t* nodeDiff(DiffNode_t* startNode, FILE* file);
 
 int equDiff(DiffNode_t* start);
 
