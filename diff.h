@@ -64,7 +64,7 @@ enum OpType_t {
     DIV_OP         =  2,
     SUB_OP         =  3,
     POW_OP         =  4,
-    SIN_OP            =  5,
+    SIN_OP         =  5,
     COS_OP         =  6,
     LN_OP          =  7,
     OPT_DEFAULT = -1,
@@ -102,17 +102,17 @@ DiffNode_t* newNodeOper(OpType_t oper, DiffNode_t* left, DiffNode_t* right);
 #define dR nodeDiff(R(startNode), file)
 #define cR nodeCopy(R(startNode))
 
-#define IS_OP(node)  node->type == OP
-#define IS_NUM(node) node->type == NUM
-#define IS_VAR(node) node->type == VAR
+#define IS_OP(node)  (node->type == OP)
+#define IS_NUM(node) (node->type == NUM)
+#define IS_VAR(node) (node->type == VAR)
 
 #define IS_COS_OP(node) node->value.opt == COS_OP
 #define IS_SIN_OP(node) node->value.opt == SIN_OP
 #define IS_LN_OP(node) node->value.opt == LN_OP
 #define IS_DIV(node) node->value.opt == DIV_OP
-#define IS_MUL_OP(node) node->value.opt == MUL_OP
+#define IS_MUL_OP(node) (node->value.opt == MUL_OP)
 #define IS_ADD_OP(node) node->value.opt == ADD_OP
-#define IS_POW_OP(node) node->value.opt == POW_OP
+#define IS_POW_OP(node) (node->value.opt == POW_OP)
 
 #define ADD(node1, node2) newNodeOper(ADD_OP, node1,   node2)
 #define SUB(node1, node2) newNodeOper(SUB_OP, node1,   node2)
@@ -225,6 +225,8 @@ void divTex(DiffNode_t* node, FILE* file);
 void triglogTex(DiffNode_t* node, FILE* file, const char* prep);
 
 void nodeToTex(DiffNode_t* node, FILE *file);
+
+bool isMulSubtree(DiffNode_t* node);
 
 void printNodeReplaced(DiffNode_t* node, FILE* file);
 

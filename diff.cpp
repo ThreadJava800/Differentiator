@@ -583,9 +583,9 @@ void anyTex(DiffNode_t* node, const char* oper, FILE* file) {
 
     bool needOper = !(IS_NUM(L(node)) && IS_VAR(R(node)) && IS_MUL_OP(node));
     bool needLeftBracket  = !(IS_NUM(L(node))  || IS_VAR(L(node)))  && ((L(node))->texSymb == '\0') 
-                                                                          && (IS_MUL_OP(node));
+                                                                          && (IS_MUL_OP(node)) && !isMulSubtree(L(node));
     bool needRightBracket = !(IS_NUM(R(node)) || IS_VAR(R(node))) && ((R(node))->texSymb == '\0')
-                                                                          && (IS_MUL_OP(node));
+                                                                          && (IS_MUL_OP(node)) && !isMulSubtree(R(node));
 
     if (needLeftBracket) fprintf(file, "(");
     printNodeReplaced(node->left, file);
@@ -601,8 +601,8 @@ void anyTex(DiffNode_t* node, const char* oper, FILE* file) {
 void powTex(DiffNode_t* node, FILE* file) {
     if (!node || !file) return;
 
-    bool needLeftBracket  = L(node)->texSymb == '\0'  && IS_OP(L(node));
-    bool needRightBracket = R(node)->texSymb == '\0' && IS_OP(R(node));
+    bool needLeftBracket  = L(node)->texSymb == '\0'  && IS_OP(L(node)) && !isMulSubtree(L(node));
+    bool needRightBracket = R(node)->texSymb == '\0'  && IS_OP(R(node)) && !isMulSubtree(R(node));
 
     fprintf(file, "{");
     if (needLeftBracket) fprintf(file, "(");
@@ -683,6 +683,16 @@ void nodeToTex(DiffNode_t* node, FILE *file) {
         default:
             break;
     }
+}
+
+bool isMulSubtree(DiffNode_t* node) {
+    if (!node) return false;
+
+    if (!IS_MUL_OP(node) && !IS_POW_OP(node) && !IS_NUM(node) && !IS_VAR(node)) return false;
+    if (L(node)) return isMulSubtree(L(node));
+    if (R(node)) return isMulSubtree(R(node));
+
+    return true;
 }
 
 void printNodeReplaced(DiffNode_t* node, FILE* file) {
@@ -845,12 +855,10 @@ void tailor(DiffNode_t* node, int pow, double x0) {
 
     for (int i = 1; i <= pow; i++) {
         diffed = nodeDiff(diffed, nullptr);
-        graphDump(diffed);
-        // easierEqu(diffed);
         funcVal = funcValue(diffed, x0);
         if (!compDouble(funcVal, 0)) {
-            if (!compDouble(x0, 0)) fprintf(texFile, "\\frac{%lg}{%lu} * {(x-%lg)}^{%d} + ", funcVal, factorial(i), x0, i);
-            else fprintf(texFile, "\\frac{%lg}{%lu} * {x}^{%d} + ", funcVal, factorial(i), i);
+            if (!compDouble(x0, 0)) fprintf(texFile, "\\frac{%lg}{%lu} \\cdot {(x-%lg)}^{%d} + ", funcVal, factorial(i), x0, i);
+            else fprintf(texFile, "\\frac{%lg}{%lu} \\cdot {x}^{%d} + ", funcVal, factorial(i), i);
         }
     }
     fprintf(texFile, "\\overline{\\overline{o}}({x}^{%d}) $\n\n", pow);

@@ -8,19 +8,31 @@
 \usepackage[T1,T2A]{fontenc}
 \usepackage[russian]{babel}
 \begin{document}
-Дано: $\frac{sin(x)}{cos(x)}$\bigskip Если Земля плоская, то очевидно:
+Дано: $\frac{{x}^{5} + 2}{x - 1}$
 
-$(cos(x))'$ = $(-1 \cdot (sin(x))) \cdot 1$
+\bigskip Ну что? Тейлора тебе дать?
 
-\bigskip Ничего не понял, но очень интересно:
+$122.5 + \frac{141.25}{1} \cdot {(x-3)}^{1} + \frac{128.75}{2} \cdot {(x-3)}^{2} + \frac{76.875}{6} \cdot {(x-3)}^{3} + \frac{26.25}{24} \cdot {(x-3)}^{4} + \frac{-5.625}{120} \cdot {(x-3)}^{5} + \frac{16.875}{720} \cdot {(x-3)}^{6} + \frac{-59.0625}{5040} \cdot {(x-3)}^{7} + \overline{\overline{o}}({x}^{7}) $
 
-$(sin(x))'$ = $(cos(x)) \cdot 1$
+\bigskip График функции $\frac{{x}^{5} + 2}{x - 1}$имеет вид:
+
+\begin{figure}[h]\center{\includegraphics[width=100mm]{graph.png}}\label{fig:t}\end{figure}\bigskip Иииииииииииииии если:
+
+$(x - 1)'$ = $1 - 0$
 
 \bigskip Любому советскому первокласснику очевидно, что
 
-$(\frac{sin(x)}{cos(x)})'$ = $\frac{((cos(x)) \cdot 1) \cdot (cos(x)) - (sin(x)) \cdot ((-1 \cdot (sin(x))) \cdot 1)}{(cos(x)) \cdot (cos(x))}$
+$({x}^{5})'$ = $1 \cdot 5 \cdot {x}^{4}$
+
+\bigskip Segmentation fault (core dumped)
+
+$({x}^{5} + 2)'$ = $1 \cdot 5 \cdot {x}^{4} + 0$
+
+\bigskip Очередное халявное преобразование:
+
+$(\frac{{x}^{5} + 2}{x - 1})'$ = $\frac{(1 \cdot 5 \cdot {x}^{4} + 0) \cdot (x - 1) - ({x}^{5} + 2) \cdot (1 - 0)}{(x - 1) \cdot (x - 1)}$
 
 \bigskip После очевидных упрощений имеем:
 
-$\frac{(cos(x)) \cdot (cos(x)) - (sin(x)) \cdot (-1 \cdot (sin(x)))}{(cos(x)) \cdot (cos(x))}$
+$\frac{5 \cdot {x}^{4} \cdot (x - 1) - {x}^{5} + 2}{(x - 1) \cdot (x - 1)}$
 \end{document}

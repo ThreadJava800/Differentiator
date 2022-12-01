@@ -12,8 +12,8 @@ int main() {
     if (!res) {
         printf("Syntax error: %s\n", S);
     }
-    // tailor(res, 7, 0);
-    // drawGraph(res);
+    tailor(res, 7, 3);
+    drawGraph(res);
     // equTangent(res, 0);
     // graphDump(res);
     equDiff(res);
