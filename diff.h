@@ -105,8 +105,9 @@ DiffNode_t* newNodeOper(OpType_t oper, DiffNode_t* left, DiffNode_t* right);
 #define cR nodeCopy(R(startNode))
 
 #define IS_OP(node)  (node->type == OP)
-#define IS_NUM(node) (node->type == NUM)
+#define IS_NUM(node) ((node)->type == NUM)
 #define IS_VAR(node) (node->type == VAR)
+#define IS_POSITIVE(node) ((node)->value.num > 0)
 
 #define IS_COS_OP(node) node->value.opt == COS_OP
 #define IS_SIN_OP(node) node->value.opt == SIN_OP

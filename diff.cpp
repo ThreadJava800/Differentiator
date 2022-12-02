@@ -709,7 +709,8 @@ void nodeToTex(DiffNode_t* node, FILE *file) {
             };
             break;
         case NUM:
-            fprintf(file, "%lg", node->value.num);
+            if (node->value.num > 0 || compDouble(node->value.num, 0)) fprintf(file, "%lg", node->value.num);
+            else fprintf(file, "(%lg)", node->value.num);
             break;
         case VAR:
             fprintf(file, "%c",  node->value.var);
@@ -762,7 +763,6 @@ void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex, si
     if (!node || !replaced || !replacedIndex) return;
     if (getTreeDepth(node) < NEED_TEX_REPLACEMENT) return;
 
-    printf("%ld ", maxTreeWidth);
     if (getTreeDepth(node) == NEED_TEX_REPLACEMENT && maxTreeWidth >= CRIT_TREE_WIDTH) {
         for (int i = 0; i < *replacedIndex; i++) {
             if (compareSubtrees(node, replaced[i])) {
