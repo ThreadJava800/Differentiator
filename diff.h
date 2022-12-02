@@ -15,7 +15,9 @@ const double EPSILON = 1e-12;
 
 const int MAX_REPLACE_COUNT = 52;
 
-const int NEED_TEX_REPLACEMENT = 11;
+const int NEED_TEX_REPLACEMENT = 4;
+
+const int CRIT_TREE_WIDTH = 150;
 
 const char phrases[][MAX_WORD_LENGTH] = {
     "\\bigskip Совершенно очевидно, что\n\n",
@@ -155,6 +157,10 @@ size_t max(size_t first, size_t second);
 
 size_t getTreeDepth(DiffNode_t* node);
 
+size_t getMaxTreeWidth(DiffNode_t* node);
+
+size_t getTreeWidth(DiffNode_t* node);
+
 bool isNodeInList(const DiffNode_t* node, DiffNode_t** replaced, const int* replacedIndex);
 
 bool compareSubtrees(DiffNode_t* node1, DiffNode_t* node2);
@@ -233,7 +239,7 @@ void printNodeReplaced(DiffNode_t* node, FILE* file);
 
 void printTexReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize);
 
-void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex);
+void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex, size_t maxTreeWidth);
 
 void makeReplacements(DiffNode_t* start, FILE* file);
 

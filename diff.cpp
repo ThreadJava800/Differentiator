@@ -55,6 +55,24 @@ size_t getTreeDepth(DiffNode_t* node) {
     return max(leftNode, rightNode) + 1;
 }
 
+size_t getMaxTreeWidth(DiffNode_t* node) {
+    size_t height = getTreeDepth(node);
+    size_t maxW = 1;
+
+    for (size_t i = 1; i <= height; i++) {
+        size_t w = getTreeWidth(node);
+        maxW = max(maxW, w);
+    }
+
+    return maxW;
+}
+
+size_t getTreeWidth(DiffNode_t* node) {
+    if (!node) return 1;
+
+    return getTreeWidth(L(node)) + getTreeWidth(R(node));
+}
+
 bool isNodeInList(const DiffNode_t* node, DiffNode_t** replaced, const int* replacedIndex) {
     if (!node || !replaced || !replacedIndex) return false;
 
@@ -740,11 +758,12 @@ void printTexReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int r
     }
 }
 
-void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex) {
+void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex, size_t maxTreeWidth) {
     if (!node || !replaced || !replacedIndex) return;
     if (getTreeDepth(node) < NEED_TEX_REPLACEMENT) return;
 
-    if (getTreeDepth(node) == NEED_TEX_REPLACEMENT) {
+    printf("%ld ", maxTreeWidth);
+    if (getTreeDepth(node) == NEED_TEX_REPLACEMENT && maxTreeWidth >= CRIT_TREE_WIDTH) {
         for (int i = 0; i < *replacedIndex; i++) {
             if (compareSubtrees(node, replaced[i])) {
                 node->texSymb = replaced[i]->texSymb;
@@ -758,8 +777,8 @@ void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex) {
         return;
     }
 
-    replaceNode(node->right, replaced, replacedIndex);
-    replaceNode(node->left, replaced, replacedIndex);
+    replaceNode(node->right, replaced, replacedIndex, maxTreeWidth);
+    replaceNode(node->left, replaced, replacedIndex, maxTreeWidth);
 }
 
 void makeReplacements(DiffNode_t* start, FILE* file) {
@@ -767,7 +786,7 @@ void makeReplacements(DiffNode_t* start, FILE* file) {
 
     DiffNode_t** replacedNodes = (DiffNode_t**) calloc(MAX_REPLACE_COUNT, sizeof(DiffNode_t*));
     int replacedIndex = 0;
-    replaceNode(start, replacedNodes, &replacedIndex);
+    replaceNode(start, replacedNodes, &replacedIndex, getMaxTreeWidth(start));
 
     printTexReplaced(start, file, replacedNodes, replacedIndex);
 }
