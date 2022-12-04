@@ -5,14 +5,14 @@ Program takes file with the following structure:
 ```
 Equation itself - string
 Tailor arguments   - pow[int] and point[double]
-Graphics arguments - left border[int] and right one[double]
+Graphics arguments - left border[double] and right one[double]
 Tangent argument - point[double]
 ```
 For example:
 ```
 cos(5*x^3)^2*sin(3*x)
 3 1.5
--2 2
+-2.5 2.5
 12.3
 ```
 This example will print tailor series in point 1.5 till o(x^3), graphic in x range = [-2:2], tangent equation in point 12.3 and in the end, you will see differential of given equation with all the transformations.
