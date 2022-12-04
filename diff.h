@@ -280,7 +280,7 @@ void printTrigPlot(DiffNode_t* node, FILE* file, const char* prep);
 
 void drawNode(DiffNode_t* node, FILE* file);
 
-void drawGraph(DiffNode_t* node, int left = -10, int right = 10);
+void drawGraph(DiffNode_t* node, double left = -10, double right = 10);
 
 void equTangent(DiffNode_t* node, double x0);
 

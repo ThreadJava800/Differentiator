@@ -601,8 +601,13 @@ void parseGraphArgs(DiffNode_t* root, FILE* readFile, char* line) {
     if (!root || !readFile || !line) return;
 
     mGetline(readFile, line);
-    int left = 0, right = 0;
-    int res = sscanf(line, "%d %d", &left, &right);
+    double left = 0, right = 0;
+    int res = sscanf(line, "%lf %lf", &left, &right);
+
+    if (compDouble(left, right)) {
+        fprintf(stderr, "Incorrect parameters: left should not be equal right\n");
+        return;
+    }
 
     if (res != 2) {
         fprintf(stderr, "Graphics args provided incorrectly\n");
@@ -1084,7 +1089,7 @@ void drawNode(DiffNode_t* node, FILE* file) {
     }
 }
 
-void drawGraph(DiffNode_t* node, int left, int right) {
+void drawGraph(DiffNode_t* node, double left, double right) {
     if (!node) return;
 
     FILE* file = popen("gnuplot -persistent", "w");
@@ -1092,7 +1097,8 @@ void drawGraph(DiffNode_t* node, int left, int right) {
 
     fprintf(file, "f(x)=");
     drawNode(node, file);
-    fprintf(file, "\nset terminal png size 960,720\nset samples 20000\nset output 'graph.png'\nplot [%d:%d] f(x)\nexit\n", left, right);
+    fprintf(file, "\nset terminal png size 960,720\nset samples 20000\nset output 'graph.png'\n"
+                  "set xzeroaxis \nset yzeroaxis\nplot [%lg:%lg] f(x)\nexit\n", left, right);
     pclose(file);
 
     fprintf(texFile, "\n\n \\bigskip График функции ");
@@ -1107,8 +1113,7 @@ void drawGraph(DiffNode_t* node, int left, int right) {
 void equTangent(DiffNode_t* node, double x0) {
     if (!node) return;
 
-    DiffNode_t* tangent = nodeCopy(node);
-    nodeDiff(tangent, nullptr);
+    DiffNode_t* tangent = nodeDiff(node, nullptr);
     double k = funcValue(tangent, x0);
     double b = funcValue(node, x0) - k * x0;
     fprintf(texFile, "\n\n \\minibox[frame]{\\centerline{Уравнение касательной в точке x=%lg имеет вид:}\\\\\n", x0);
