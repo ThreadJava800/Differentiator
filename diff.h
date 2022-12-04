@@ -19,6 +19,12 @@ const int NEED_TEX_REPLACEMENT = 4;
 
 const int CRIT_TREE_WIDTH = 150;
 
+const double DIV_REPL_CONST = 0.9;
+
+const double POW_REPL_CONST = 0.4;
+
+const int leaveReplacements = 2;
+
 const char phrases[][MAX_WORD_LENGTH] = {
     "\\bigskip Совершенно очевидно, что\n\n",
     "\\bigskip Заметим, что\n\n",
@@ -172,29 +178,25 @@ size_t factorial(int pow);
 
 void addPrevs(DiffNode_t* start);
 
-DiffNode_t* getG(const char** s);
+DiffNode_t* getG(char** s);
 
-DiffNode_t* getE(const char** s);
+DiffNode_t* getE(char** s);
 
-DiffNode_t* getT(const char** s);
+DiffNode_t* getT(char** s);
 
-DiffNode_t* getP(const char** s);
+DiffNode_t* getP(char** s);
 
-DiffNode_t* parseTrig(OpType_t oper, const char** s);
+DiffNode_t* parseTrig(OpType_t oper, char** s);
 
-DiffNode_t* getX(const char** s);
+DiffNode_t* getX(char** s);
 
 DiffNode_t* setOper(DiffNode_t* val1, DiffNode_t* val2, OpType_t oper);
 
-DiffNode_t* getN(const char** s);
+DiffNode_t* getN(char** s);
 
-DiffNode_t* getSt(const char** s);
+DiffNode_t* getSt(char** s);
 
-long int getFileSize(const char *fileAddress);
-
-char *readTextToBuffer(FILE *file, long int fileSize);
-
-DiffNode_t* parseEquation(const char** s);
+DiffNode_t* parseEquation(char** s);
 
 DiffNode_t* nodeCopy(DiffNode_t* nodeToCopy);
 
@@ -218,6 +220,16 @@ DiffNode_t* nodeDiff(DiffNode_t* startNode, FILE* file);
 
 int equDiff(DiffNode_t* start);
 
+void parseTailorArgs(DiffNode_t* root, FILE* readFile, char* line);
+
+void parseGraphArgs(DiffNode_t* root, FILE* readFile, char* line);
+
+void parseTangentArgs(DiffNode_t* root, FILE* readFile, char* line);
+
+DiffNode_t* parseArgs(FILE* readFile);
+
+char *mGetline(FILE *stream, char *s, char dump = EOF);
+
 DiffNode_t* openDiffFile(const char *fileName, const char *texName = "zorich.tex");
 
 void diffNodeDtor(DiffNode_t* node);
@@ -239,6 +251,8 @@ bool isMulSubtree(DiffNode_t* node);
 void printNodeReplaced(DiffNode_t* node, FILE* file);
 
 void printTexReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize);
+
+double getReplaceCoeff(DiffNode_t* node, double oldCoef = 1, int count = 1);
 
 void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex, size_t maxTreeWidth);
 
@@ -268,7 +282,7 @@ void printTrigPlot(DiffNode_t* node, FILE* file, const char* prep);
 
 void drawNode(DiffNode_t* node, FILE* file);
 
-void drawGraph(DiffNode_t* node);
+void drawGraph(DiffNode_t* node, int left = -10, int right = 10);
 
 void equTangent(DiffNode_t* node, double x0);
 

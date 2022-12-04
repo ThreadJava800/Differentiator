@@ -119,7 +119,7 @@ size_t factorial(int POW_OP) {
 
 // PARSER
 
-// G    = E '\0'
+// G    = E '\0' | '\n'
 // E    = T{['+' |  '-']T}*
 // T    = ST{['*' | '/']ST}*
 // ST   = P{[^]P}*
@@ -137,7 +137,7 @@ DiffNode_t* setOper(DiffNode_t* val1, DiffNode_t* val2, OpType_t oper) {
     return operVal;
 }
 
-DiffNode_t* getN(const char** s) {
+DiffNode_t* getN(char** s) {
     if (!s || !(*s)) return nullptr;
 
     double val = 0;
@@ -179,7 +179,7 @@ DiffNode_t* getN(const char** s) {
     return numNode;
 }
 
-DiffNode_t* getP(const char** s) {
+DiffNode_t* getP(char** s) {
     if (!s || !(*s)) return nullptr;
 
     DiffNode_t* val = nullptr;
@@ -195,14 +195,14 @@ DiffNode_t* getP(const char** s) {
     return val;
 }
 
-DiffNode_t* parseTrig(OpType_t oper, const char** s) {
+DiffNode_t* parseTrig(OpType_t oper, char** s) {
     if (!s || !(*s)) return nullptr;
 
     DiffNode_t* rightNode = getP(s);
     return setOper(nullptr, rightNode, oper);
 }
 
-DiffNode_t* getX(const char** s) {
+DiffNode_t* getX(char** s) {
     if (!s || !(*s)) return nullptr;
 
     DiffNode_t* node = nullptr;
@@ -232,7 +232,7 @@ DiffNode_t* getX(const char** s) {
     return node;
 }
 
-DiffNode_t* getT(const char** s) {
+DiffNode_t* getT(char** s) {
     if (!s || !(*s)) return nullptr;
 
     DiffNode_t* val1 = getSt(s);
@@ -254,7 +254,7 @@ DiffNode_t* getT(const char** s) {
     return val1;
 }
 
-DiffNode_t* getSt(const char** s) {
+DiffNode_t* getSt(char** s) {
     if (!s || !(*s)) return nullptr;
 
     DiffNode_t* val1 = getP(s);
@@ -270,7 +270,7 @@ DiffNode_t* getSt(const char** s) {
     return val1;
 }
 
-DiffNode_t* getE(const char** s) {
+DiffNode_t* getE(char** s) {
     if (!s || !(*s)) return nullptr;
 
     DiffNode_t* val1 = getT(s);
@@ -292,12 +292,12 @@ DiffNode_t* getE(const char** s) {
     return val1;
 }
 
-DiffNode_t* getG(const char** s) {
+DiffNode_t* getG(char** s) {
     if (!s || !(*s)) return nullptr;
 
     const char* start = *s;
     DiffNode_t* node = getE(s);
-    if (**s != '\0') {
+    if (**s != '\0' && **s != '\n') {
         fprintf(stderr, "Syntax error: (pos=%ld) %s\n", *s - start, *s);
         return nullptr;
     }
@@ -316,27 +316,7 @@ void addPrevs(DiffNode_t* start) {
     if (start->right) addPrevs(start->right);
 }
 
-long int getFileSize(const char *fileAddress) {
-    if (!fileAddress) return 0;
-
-    struct stat fileStat = {};
-    stat(fileAddress, &fileStat);
-
-    return fileStat.st_size;
-}
-
-char *readTextToBuffer(FILE *file, long int fileSize) {
-    if (fileSize < 0) return nullptr;
-
-    char *buffer = (char *) calloc((size_t) fileSize + 1, sizeof(char)); //fileSize can't be negative!
-    if (!buffer) return nullptr;
-
-    fread(buffer, sizeof(char), (size_t) fileSize + 1, file); //fileSize can't be negative!
-
-    return buffer;
-}
-
-DiffNode_t* parseEquation(const char** s) {
+DiffNode_t* parseEquation(char** s) {
     if (!s) return nullptr;
 
     DiffNode_t* startNode = getG(s);
@@ -523,41 +503,44 @@ DiffNode_t* nodeDiff(DiffNode_t* node, FILE* file) {
     if (startNode->type == NUM) {
         startNode->value.num = 0;
         return startNode;
-    } else if (startNode->type == VAR) {
+    } 
+
+    if (startNode->type == VAR) {
         startNode->type = NUM;
         startNode->value.num  = 1;
         return startNode;
-    } else {
-        switch(startNode->value.opt) {
-            case ADD_OP:
-                startNode = ADD(dL, dR);
-                break;
-            case SUB_OP:
-                startNode = SUB(dL, dR);
-                break;
-            case MUL_OP:
-                startNode = ADD(MUL(dL, cR), MUL(cL, dR));
-                break;
-            case DIV_OP:
-                startNode = DIV(SUB(MUL(dL, cR), MUL(cL, dR)), MUL(cR, cR));
-                break;
-            case POW_OP:
-                startNode = diffPow(startNode, file);
-                break;
-            case SIN_OP:
-                startNode = MUL(COS(cR), dR);
-                break;
-            case COS_OP:
-                startNode = MUL(MUL(newNumNode(nullptr, nullptr, nullptr, -1), SIN(cR)), dR);
-                break;
-            case LN_OP:
-                startNode = DIV(dR, cR);
-                break;
-            case OPT_DEFAULT:
-            default:
-                break;
-        }
     }
+
+    switch(startNode->value.opt) {
+        case ADD_OP:
+            startNode = ADD(dL, dR);
+            break;
+        case SUB_OP:
+            startNode = SUB(dL, dR);
+            break;
+        case MUL_OP:
+            startNode = ADD(MUL(dL, cR), MUL(cL, dR));
+            break;
+        case DIV_OP:
+            startNode = DIV(SUB(MUL(dL, cR), MUL(cL, dR)), MUL(cR, cR));
+            break;
+        case POW_OP:
+            startNode = diffPow(startNode, file);
+            break;
+        case SIN_OP:
+            startNode = MUL(COS(cR), dR);
+            break;
+        case COS_OP:
+            startNode = MUL(MUL(newNumNode(nullptr, nullptr, nullptr, -1), SIN(cR)), dR);
+            break;
+        case LN_OP:
+            startNode = DIV(dR, cR);
+            break;
+        case OPT_DEFAULT:
+        default:
+            break;
+    }
+
     if (file) {
         printRandomPhrase(file);
         printLineToTex(file, "$(");
@@ -582,6 +565,85 @@ int equDiff(DiffNode_t* start) {
     return DIFF_OK;
 }
 
+char *mGetline(FILE *stream, char *s, char dump) {
+    if (!stream || !s) return nullptr;
+
+    int val = fgetc(stream);
+
+    while (val != EOF && val != '\n' && val != dump) {
+        *s = (char) val;
+        s++;
+
+        val = fgetc(stream);
+    }
+    *s = '\0';
+
+    return s;
+}
+
+void parseTailorArgs(DiffNode_t* root, FILE* readFile, char* line) {
+    if (!root || !readFile || !line) return;
+
+    mGetline(readFile, line);
+    int pow = 0;
+    double point = 0;
+    int res = sscanf(line, "%d %lf", &pow, &point);
+
+    if (res != 2) {
+        fprintf(stderr, "Tailor args provided incorrectly\n");
+        return;
+    }
+
+    tailor(root, pow, point);
+}
+
+void parseGraphArgs(DiffNode_t* root, FILE* readFile, char* line) {
+    if (!root || !readFile || !line) return;
+
+    mGetline(readFile, line);
+    int left = 0, right = 0;
+    int res = sscanf(line, "%d %d", &left, &right);
+
+    if (res != 2) {
+        fprintf(stderr, "Graphics args provided incorrectly\n");
+        return;
+    }
+
+    drawGraph(root, left, right);
+}
+
+void parseTangentArgs(DiffNode_t* root, FILE* readFile, char* line) {
+    if (!root || !readFile || !line) return;
+
+    mGetline(readFile, line);
+    double point = 0;
+    int res = sscanf(line, "%lf", &point);
+
+    if (res != 1) {
+        fprintf(stderr, "Tangent args provided incorrectly\n");
+        return;
+    }
+
+    equTangent(root, point);
+}
+
+DiffNode_t* parseArgs(FILE* readFile) {
+    if (!readFile) return nullptr;
+
+    char* line = (char*) calloc(MAX_WORD_LENGTH, sizeof(char));
+    mGetline(readFile, line);
+    DiffNode_t* root = parseEquation(&line);
+    fprintf(texFile, "Дано: ");
+    diffToTex(root);
+
+    parseTailorArgs(root, readFile, line);
+    parseGraphArgs(root, readFile, line);
+    parseTangentArgs(root, readFile, line);
+
+    equDiff(root);
+    return root;
+}
+
 DiffNode_t* openDiffFile(const char *fileName, const char *texName) {
     if (!fileName) return nullptr;
 
@@ -592,10 +654,7 @@ DiffNode_t* openDiffFile(const char *fileName, const char *texName) {
 
     srand((unsigned int) time(NULL));
 
-    const char* equTxt = readTextToBuffer(readFile, getFileSize(fileName));
-    DiffNode_t* root = parseEquation(&equTxt);
-    fprintf(texFile, "Дано: ");
-    diffToTex(root);
+    DiffNode_t* root = parseArgs(readFile);
     fclose(readFile);
 
     return root;
@@ -759,11 +818,23 @@ void printTexReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int r
     }
 }
 
+double getReplaceCoeff(DiffNode_t* node, double oldCoef, int count) {
+    if (!node || NEED_TEX_REPLACEMENT - count >= leaveReplacements) return oldCoef;
+
+    if      (IS_DIV(node))    oldCoef = (oldCoef + DIV_REPL_CONST) / (2 * count++);
+    else if (IS_POW_OP(node)) oldCoef = (oldCoef + POW_REPL_CONST) / (2 * count++);
+
+    if (L(node)) return getReplaceCoeff(L(node), oldCoef, count);
+    if (R(node)) return getReplaceCoeff(R(node), oldCoef, count);
+
+    return 1;
+}
+
 void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex, size_t maxTreeWidth) {
     if (!node || !replaced || !replacedIndex) return;
     if (getTreeDepth(node) < NEED_TEX_REPLACEMENT) return;
 
-    if (getTreeDepth(node) == NEED_TEX_REPLACEMENT && maxTreeWidth >= CRIT_TREE_WIDTH) {
+    if (getTreeDepth(node) == NEED_TEX_REPLACEMENT && (double) maxTreeWidth * getReplaceCoeff(node) > CRIT_TREE_WIDTH) {
         for (int i = 0; i < *replacedIndex; i++) {
             if (compareSubtrees(node, replaced[i])) {
                 node->texSymb = replaced[i]->texSymb;
@@ -991,7 +1062,7 @@ void drawNode(DiffNode_t* node, FILE* file) {
     }
 }
 
-void drawGraph(DiffNode_t* node) {
+void drawGraph(DiffNode_t* node, int left, int right) {
     if (!node) return;
 
     FILE* file = popen("gnuplot -persistent", "w");
@@ -999,10 +1070,10 @@ void drawGraph(DiffNode_t* node) {
 
     fprintf(file, "f(x)=");
     drawNode(node, file);
-    fprintf(file, "\nset terminal png size 960,720\nset output 'graph.png'\nplot f(x)\nexit\n");
+    fprintf(file, "\nset terminal png size 960,720\nset samples 20000\nset output 'graph.png'\nplot [%d:%d] f(x)\nexit\n", left, right);
     pclose(file);
 
-    fprintf(texFile, "\\bigskip График функции ");
+    fprintf(texFile, "\n\n \\bigskip График функции ");
     diffToTex(node);
     fprintf(texFile, "имеет вид:\n\n");
     fprintf(texFile, "\\begin{figure}[h]"

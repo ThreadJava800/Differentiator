@@ -2,15 +2,13 @@
 
 #include "diff.h"
 
-int main() {
-    DiffNode_t* res = openDiffFile("hardExample.txt");
-
-    tailor(res, 3, 0);
-    drawGraph(res);
-    equTangent(res, 0);
-    equDiff(res);
-
-    diffNodeDtor(res);
+int main(int argc, char *argv[]) {
+    if (argc == 2) {
+        DiffNode_t* res = openDiffFile(argv[1]);
+        diffNodeDtor(res);
+    } else {
+        fprintf(stderr, "Incorrect arguments provided\n");
+    }
 
     return 0;
 }
