@@ -522,7 +522,7 @@ DiffNode_t* nodeDiff(DiffNode_t* node, FILE* file) {
             startNode = ADD(MUL(dL, cR), MUL(cL, dR));
             break;
         case DIV_OP:
-            startNode = DIV(SUB(MUL(dL, cR), MUL(cL, dR)), MUL(cR, cR));
+            startNode = DIV(SUB(MUL(dL, cR), MUL(cL, dR)), POW(cR, newNumNode(nullptr, nullptr, nullptr, 2)));
             break;
         case POW_OP:
             startNode = diffPow(startNode, file);
@@ -818,23 +818,45 @@ void printTexReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int r
     }
 }
 
-double getReplaceCoeff(DiffNode_t* node, double oldCoef, int count) {
-    if (!node || NEED_TEX_REPLACEMENT - count >= leaveReplacements) return oldCoef;
+DiffNode_t* firstDivNode(DiffNode_t* node) {
+    if (!node) return nullptr;
 
-    if      (IS_DIV(node))    oldCoef = (oldCoef + DIV_REPL_CONST) / (2 * count++);
-    else if (IS_POW_OP(node)) oldCoef = (oldCoef + POW_REPL_CONST) / (2 * count++);
+    if (IS_DIV(node)) return node;
 
-    if (L(node)) return getReplaceCoeff(L(node), oldCoef, count);
-    if (R(node)) return getReplaceCoeff(R(node), oldCoef, count);
+    if (L(node)) return firstDivNode(L(node));
+    if (R(node)) return firstDivNode(R(node));
 
-    return 1;
+    return nullptr;
+}
+
+bool needReplace(DiffNode_t* node, size_t maxTreeWidth) {
+    if (!node) return false;
+
+    double coef = 0;
+    DiffNode_t* firstDiv = firstDivNode(node);
+    if (firstDiv) {
+        size_t leftDiv  = getTreeDepth(L(firstDiv));
+        size_t rightDiv = getTreeDepth(R(firstDiv));
+
+        if (leftDiv == NEED_TEX_REPLACEMENT || rightDiv == NEED_TEX_REPLACEMENT) {
+            coef = 1;
+        }
+    } else {
+        size_t nodeDepth = getTreeDepth(node);
+        if (nodeDepth == NEED_TEX_REPLACEMENT) coef = 1;
+    }
+
+    if (IS_POW_OP(node)) coef *= POW_REPL_CONST;
+
+
+    return coef * (double) maxTreeWidth > CRIT_TREE_WIDTH;
 }
 
 void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex, size_t maxTreeWidth) {
     if (!node || !replaced || !replacedIndex) return;
     if (getTreeDepth(node) < NEED_TEX_REPLACEMENT) return;
 
-    if (getTreeDepth(node) == NEED_TEX_REPLACEMENT && (double) maxTreeWidth * getReplaceCoeff(node) > CRIT_TREE_WIDTH) {
+    if (needReplace(node, maxTreeWidth)) {
         for (int i = 0; i < *replacedIndex; i++) {
             if (compareSubtrees(node, replaced[i])) {
                 node->texSymb = replaced[i]->texSymb;

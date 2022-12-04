@@ -19,11 +19,7 @@ const int NEED_TEX_REPLACEMENT = 4;
 
 const int CRIT_TREE_WIDTH = 150;
 
-const double DIV_REPL_CONST = 0.9;
-
-const double POW_REPL_CONST = 0.4;
-
-const int leaveReplacements = 2;
+const double POW_REPL_CONST = 0.6;
 
 const char phrases[][MAX_WORD_LENGTH] = {
     "\\bigskip Совершенно очевидно, что\n\n",
@@ -252,7 +248,9 @@ void printNodeReplaced(DiffNode_t* node, FILE* file);
 
 void printTexReplaced(DiffNode_t* node, FILE* file, DiffNode_t** replaced, int replacedSize);
 
-double getReplaceCoeff(DiffNode_t* node, double oldCoef = 1, int count = 1);
+DiffNode_t* firstDivNode(DiffNode_t* node);
+
+bool needReplace(DiffNode_t* node, size_t maxTreeWidth);
 
 void replaceNode(DiffNode_t* node, DiffNode_t** replaced, int* replacedIndex, size_t maxTreeWidth);
 
